@@ -9,7 +9,7 @@ This module provisions the Azure resource group, storage account, and blob conta
 - `state_container_name`: Name of the Blob container inside the storage account where Terraform state files are stored (typically tfstate).
 
 ## Usage
-Create local config files (do not commit):
+Create local config files (do not commit):  
 (steps assume you are Azure authenticated as pointed out in root README.md)
 1. Copy `bootstrap.auto.tfvars.example` → `bootstrap.auto.tfvars`
 2. Edit values as needed. **Note:** Storage account name must be globally unique.

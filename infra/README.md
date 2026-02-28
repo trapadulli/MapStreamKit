@@ -15,7 +15,7 @@ Terraform cannot provision its own backend resources in the same state. You must
 - `tags`: Map of tags to apply to all resources
 
 ## Usage
-Create local config files (do not commit):
+Create local config files (do not commit):  
 (steps assume you are Azure authenticated as pointed out in root README.md)
 1. Copy `backend.hcl.example` → `backend.hcl`
 2. Copy `config.auto.tfvars.example` → `config.auto.tfvars`
