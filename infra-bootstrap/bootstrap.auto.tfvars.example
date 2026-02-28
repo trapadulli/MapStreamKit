@@ -1,0 +1,4 @@
+location                   = "eastus"
+state_rg_name              = "rg-yourorg-tfstate"
+state_storage_account_name = "styourorgtfstate123"
+state_container_name       = "tfstate"

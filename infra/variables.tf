@@ -1,11 +1,20 @@
+variable "brand" {
+  type    = string
+  default = "msk"
+}
+
+variable "org" {
+  type = string
+}
+
 variable "env" {
-  type        = string
+  type = string
   description = "Environment name: dev|stage|prod"
   default     = "dev"
 }
 
 variable "location" {
-  type        = string
+  type = string
   description = "Azure region"
   default     = "eastus"
 }

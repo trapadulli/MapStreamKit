@@ -1,34 +1,29 @@
 locals {
-  # MapStreamKit naming
-  name_prefix = "msk-${var.env}"
+  prefix = "${var.org}-${var.brand}-${var.env}"
 
   # Resource group
-  rg_name = "rg-${local.name_prefix}"
+  rg_name   = "rg-${local.prefix}"
 
   # Event Hubs
-  ehns_name = "ehns-${local.name_prefix}"
-  eh_name   = "eh-msk-events"
+  ehns_name = "ehns-${local.prefix}"
+  eh_name     = "eh-${var.brand}-events"
 
   # Observability
-  law_name  = "law-${local.name_prefix}"
-  appi_func = "appi-msk-func-${var.env}"
-  appi_gql  = "appi-msk-gql-${var.env}"
+  law_name  = "law-${local.prefix}"
+  appi_func = "appi-${var.brand}-func-${var.env}"
+  appi_gql  = "appi-${var.brand}-gql-${var.env}"
 
   # Uniqueness suffix (lowercase letters/digits)
   # KV and Cosmos allow hyphens; storage does not.
-  kv_name = "kv-${local.name_prefix}-${random_string.suffix.result}"
-
-  storage_name = "stmsk${var.env}${random_string.suffix.result}"
-
-  cosmos_name = "cosmos-${local.name_prefix}-${random_string.suffix.result}"
-  cosmos_db   = "msk"
-  cosmos_raw  = "raw_envelopes"
+  kv_name = "kv-${local.prefix}-${random_string.suffix.result}"
+  storage_name = "st${var.brand}${var.env}${random_string.suffix.result}"
+  cosmos_name = "cosmos-${local.prefix}-${random_string.suffix.result}"
 
   # Managed identities
-  uami_ingest    = "uami-msk-ingest-${var.env}"
-  uami_adapter   = "uami-msk-adapter-${var.env}"
-  uami_processor = "uami-msk-processor-${var.env}"
-  uami_gql       = "uami-msk-gql-${var.env}"
+  uami_ingest    = "uami-${var.brand}-ingest-${var.env}"
+  uami_adapter   = "uami-${var.brand}-adapter-${var.env}"
+  uami_processor = "uami-${var.brand}-processor-${var.env}"
+  uami_gql       = "uami-${var.brand}-gql-${var.env}"
 }
 
 resource "random_string" "suffix" {

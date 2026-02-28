@@ -17,7 +17,7 @@ MapStreamKit/
 │  ├─ variables.tf
 │  ├─ main.tf
 │  ├─ outputs.tf
-│  ├─ backend.tf                  # (optional) remote state, add later
+│  ├─ backend.tf                  # declares azurerm backend (configured via backend.hcl)
 │  └─ .gitignore                  # or root .gitignore
 ├─ runtime/
 │  ├─ head/                       # Azure Functions: pull external APIs, build envelopes, POST ingress
@@ -30,24 +30,23 @@ MapStreamKit/
 ```
 
 ### Dataflow (MVP)
-
 ```
 +------------------+       POST /events        +----------------------+
 | Head Pullers      |------------------------->| Adapter Ingress       |
 | (Azure Functions) |                          | (Function or Container|
 | - pull providers  |                          |  App)                 |
 | - build envelope  |                          | - validate envelope   |
-+------------------+                          | - produce to Event Hub|
-                                              +----------+-----------+
-                                                         |
-                                                         v
-                                              +----------------------+
-                                              | Azure Event Hubs     |
-                                              | hub: eh-smk-events   |
-                                              | CG: processor        |
-                                              +----------+-----------+
-                                                         |
-                                                         v
++------------------+                           | - produce to Event Hub|
+                                                +----------+-----------+
+                                                           |
+                                                           v
+                                                +----------------------+
+                                                | Azure Event Hubs     |
+                                                | hub: eh-msk-events   |
+                                                | CG: processor        |
+                                                +----------+-----------+
+                                                           |
+                                                           v
 +------------------+      validate payload schema (Blob)  +----------------------+
 | Tail Processor   |<-------------------------------------| Storage (schemas)    |
 | (EventHub Func)  |                                      | dlq/checkpoints      |
@@ -60,7 +59,7 @@ MapStreamKit/
           v
 +---------------------------+
 | Cosmos DB (serverless)    |
-| db: smk                   |
+| db: msk                   |
 | container: raw_envelopes  |
 | pk: /partitionKey         |
 +---------------------------+
@@ -71,35 +70,24 @@ MapStreamKit/
 
 ---
 
+## Prerequisites
+- [Terraform >= 1.5.0](https://www.terraform.io/downloads.html)
+- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+- Contributor access to the target Azure subscription
+- Adjust variables as needed for your environment.
 
 ## Getting Started
+To set up MapStreamKit infrastructure
+1. Authenticate with Azure:
+   ```sh
+   az login
+   az account set --subscription "<SUBSCRIPTION_ID>"
+   ```
+Then follow the appropriate step-by-step instructions in:
+- `infra-bootstrap/README.md` (for remote state backend bootstrap)
+- `infra/README.md` (for main infrastructure deployment)
 
-### 1. Bootstrap Remote State Backend
-Before deploying the main infrastructure, you must provision the remote state backend using the infra-bootstrap module:
-
-```sh
-cd infra-bootstrap
-terraform init
-terraform apply
-```
-This will create the resource group, storage account, and blob container needed for Terraform remote state.
-
-### 2. Review and Customize Variables
-Edit variables in `infra/variables.tf` as needed for your environment.
-
-### 3. Authenticate with Azure CLI
-```sh
-az login
-az account set --subscription "<SUBSCRIPTION_ID>"
-```
-
-### 4. Deploy Main Infrastructure
-```sh
-cd infra
-terraform init
-terraform plan -var="env=dev" -var="location=eastus" -out=tfplan
-terraform apply tfplan
-```
+Each README contains the most up-to-date commands and configuration guidance for its respective module.
 
 ---
 

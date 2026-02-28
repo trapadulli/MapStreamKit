@@ -3,3 +3,11 @@
 *.tfstate.*
 .terraform/
 .terraform.lock.hcl
+
+# Ignore local config and backend files
+backend.hcl
+config.auto.tfvars
+*.auto.tfvars
+
+# Local business config
+bootstrap.auto.tfvars
