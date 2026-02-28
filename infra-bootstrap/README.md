@@ -3,10 +3,10 @@ This module provisions the Azure resource group, storage account, and blob conta
 
 ## Variables
 - `location`: Azure region where the Terraform state resource group and storage account will be created (e.g., eastus).
-- `state_rg_name`: Name of the Azure Resource Group that will contain the Terraform  state storage account.
-- `state_storage_account_name`: Globally unique Azure Storage Account name used to store Terraform state.  
+- `resource_group_name`: Name of the Azure Resource Group that will contain the Terraform  state storage account.
+- `storage_account_name`: Globally unique Azure Storage Account name used to store Terraform state.  
   Must be 3–24 characters, lowercase letters and numbers only, no hyphens.
-- `state_container_name`: Name of the Blob container inside the storage account where Terraform state files are stored (typically tfstate).
+- `container_name`: Name of the Blob container inside the storage account where Terraform state files are stored (typically tfstate).
 
 ## Usage
 Create local config files (do not commit):  

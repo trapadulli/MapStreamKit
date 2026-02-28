@@ -3,17 +3,17 @@ variable "location" {
   default = "eastus"
 }
 
-variable "state_rg_name" {
+variable "resource_group_name" {
   type    = string
   default = "rg-msk-tfstate"
 }
 
-variable "state_storage_account_name" {
+variable "storage_account_name" {
   type    = string
   default = "stmsktfstate"
 }
 
-variable "state_container_name" {
+variable "container_name" {
   type    = string
   default = "tfstate"
 }

@@ -1,29 +1,34 @@
 locals {
-  prefix = "${var.org}-${var.brand}-${var.env}"
+  # MapStreamKit naming
+  name_prefix = "msk-${var.env}"
 
   # Resource group
-  rg_name   = "rg-${local.prefix}"
+  rg_name = "rg-${local.name_prefix}"
 
   # Event Hubs
-  ehns_name = "ehns-${local.prefix}"
-  eh_name     = "eh-${var.brand}-events"
+  ehns_name = "ehns-${local.name_prefix}"
+  eh_name   = "eh-msk-events"
 
   # Observability
-  law_name  = "law-${local.prefix}"
-  appi_func = "appi-${var.brand}-func-${var.env}"
-  appi_gql  = "appi-${var.brand}-gql-${var.env}"
+  law_name  = "law-${local.name_prefix}"
+  appi_func = "appi-msk-func-${var.env}"
+  appi_gql  = "appi-msk-gql-${var.env}"
 
   # Uniqueness suffix (lowercase letters/digits)
   # KV and Cosmos allow hyphens; storage does not.
-  kv_name = "kv-${local.prefix}-${random_string.suffix.result}"
-  storage_name = "st${var.brand}${var.env}${random_string.suffix.result}"
-  cosmos_name = "cosmos-${local.prefix}-${random_string.suffix.result}"
+  kv_name = "kv-${local.name_prefix}-${random_string.suffix.result}"
+
+  storage_name = "stmsk${var.env}${random_string.suffix.result}"
+
+  cosmos_name = "cosmos-${local.name_prefix}-${random_string.suffix.result}"
+  cosmos_db   = "msk"
+  cosmos_raw  = "raw_envelopes"
 
   # Managed identities
-  uami_ingest    = "uami-${var.brand}-ingest-${var.env}"
-  uami_adapter   = "uami-${var.brand}-adapter-${var.env}"
-  uami_processor = "uami-${var.brand}-processor-${var.env}"
-  uami_gql       = "uami-${var.brand}-gql-${var.env}"
+  uami_ingest    = "uami-msk-ingest-${var.env}"
+  uami_adapter   = "uami-msk-adapter-${var.env}"
+  uami_processor = "uami-msk-processor-${var.env}"
+  uami_gql       = "uami-msk-gql-${var.env}"
 }
 
 resource "random_string" "suffix" {
@@ -86,26 +91,26 @@ resource "azurerm_storage_account" "st" {
 
 resource "azurerm_storage_container" "schemas" {
   name                  = "schemas"
-  storage_account_name  = azurerm_storage_account.st.name
+  storage_account_id    = azurerm_storage_account.st.id
   container_access_type = "private"
 }
 
 resource "azurerm_storage_container" "dlq" {
   name                  = "dlq"
-  storage_account_name  = azurerm_storage_account.st.name
+  storage_account_id    = azurerm_storage_account.st.id
   container_access_type = "private"
 }
 
 resource "azurerm_storage_container" "checkpoints" {
   name                  = "checkpoints"
-  storage_account_name  = azurerm_storage_account.st.name
+  storage_account_id    = azurerm_storage_account.st.id
   container_access_type = "private"
 }
 
 resource "azurerm_storage_container" "replay" {
   count                 = var.enable_replay ? 1 : 0
   name                  = "replay"
-  storage_account_name  = azurerm_storage_account.st.name
+  storage_account_id    = azurerm_storage_account.st.id
   container_access_type = "private"
 }
 
@@ -125,9 +130,6 @@ resource "azurerm_eventhub_namespace" "ehns" {
 
 resource "azurerm_eventhub" "events" {
   name                = local.eh_name
-  namespace_name      = azurerm_eventhub_namespace.ehns.name
-  resource_group_name = azurerm_resource_group.rg.name
-
   partition_count   = var.eventhub_partitions
   message_retention = var.eventhub_retention_days
 }
@@ -185,8 +187,7 @@ resource "azurerm_cosmosdb_sql_container" "raw_envelopes" {
   resource_group_name = azurerm_resource_group.rg.name
   account_name        = azurerm_cosmosdb_account.cosmos.name
   database_name       = azurerm_cosmosdb_sql_database.db.name
-
-  partition_key_path    = "/partitionKey"
+  partition_key_paths    = ["/partitionKey"]
   partition_key_version = 2
 
   indexing_policy {
@@ -209,8 +210,6 @@ resource "azurerm_key_vault" "kv" {
   sku_name                   = "standard"
   soft_delete_retention_days = 7
   purge_protection_enabled   = false
-
-  enable_rbac_authorization = true
   tags                       = var.tags
 }
 
@@ -278,6 +277,11 @@ resource "azurerm_role_assignment" "st_blob_contrib_processor" {
 }
 
 # Cosmos
+resource "azurerm_role_assignment" "cosmos_contrib_processor" {
+  scope                = azurerm_cosmosdb_account.cosmos.id
+  role_definition_name = "Cosmos DB Built-in Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.processor.principal_id
+}
 
 # Key Vault secret read (broad for MVP; tighten later)
 resource "azurerm_role_assignment" "kv_secrets_user_ingest" {
