@@ -31,13 +31,13 @@ MapStreamKit/
 
 ### Dataflow (MVP)
 ```
-+------------------+       POST /events        +----------------------+
++-------------------+       POST /events       +----------------------+
 | Head Pullers      |------------------------->| Adapter Ingress       |
 | (Azure Functions) |                          | (Function or Container|
 | - pull providers  |                          |  App)                 |
 | - build envelope  |                          | - validate envelope   |
-+------------------+                           | - produce to Event Hub|
-                                                +----------+-----------+
++-------------------+                          | - produce to Event Hub|
+                                               +-----------+-----------+
                                                            |
                                                            v
                                                 +----------------------+
