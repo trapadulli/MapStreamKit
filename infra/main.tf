@@ -91,26 +91,26 @@ resource "azurerm_storage_account" "st" {
 
 resource "azurerm_storage_container" "schemas" {
   name                  = "schemas"
-  storage_account_id    = azurerm_storage_account.st.id
+  storage_account_name  = azurerm_storage_account.st.name
   container_access_type = "private"
 }
 
 resource "azurerm_storage_container" "dlq" {
   name                  = "dlq"
-  storage_account_id    = azurerm_storage_account.st.id
+  storage_account_name  = azurerm_storage_account.st.name
   container_access_type = "private"
 }
 
 resource "azurerm_storage_container" "checkpoints" {
   name                  = "checkpoints"
-  storage_account_id    = azurerm_storage_account.st.id
+  storage_account_name  = azurerm_storage_account.st.name
   container_access_type = "private"
 }
 
 resource "azurerm_storage_container" "replay" {
   count                 = var.enable_replay ? 1 : 0
   name                  = "replay"
-  storage_account_id    = azurerm_storage_account.st.id
+  storage_account_name  = azurerm_storage_account.st.name
   container_access_type = "private"
 }
 
@@ -130,8 +130,10 @@ resource "azurerm_eventhub_namespace" "ehns" {
 
 resource "azurerm_eventhub" "events" {
   name                = local.eh_name
-  partition_count   = var.eventhub_partitions
-  message_retention = var.eventhub_retention_days
+  resource_group_name = azurerm_resource_group.rg.name
+  namespace_name      = azurerm_eventhub_namespace.ehns.name
+  partition_count     = var.eventhub_partitions
+  message_retention   = var.eventhub_retention_days
 }
 
 resource "azurerm_eventhub_consumer_group" "processor" {
@@ -277,11 +279,7 @@ resource "azurerm_role_assignment" "st_blob_contrib_processor" {
 }
 
 # Cosmos
-resource "azurerm_role_assignment" "cosmos_contrib_processor" {
-  scope                = azurerm_cosmosdb_account.cosmos.id
-  role_definition_name = "Cosmos DB Built-in Data Contributor"
-  principal_id         = azurerm_user_assigned_identity.processor.principal_id
-}
+// ...existing code...
 
 # Key Vault secret read (broad for MVP; tighten later)
 resource "azurerm_role_assignment" "kv_secrets_user_ingest" {

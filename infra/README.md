@@ -6,6 +6,22 @@ Before running `terraform init` for the main infra stack, you must provision the
 
 Terraform cannot provision its own backend resources in the same state. You must create these manually (via Azure Portal, CLI, or a separate bootstrap script) before initializing this stack.
 
+## Azure Resource Provider Registration (required)
+Before running terraform init, ensure your subscription is registered for all required resource providers:
+
+```sh
+az provider register --namespace Microsoft.Storage
+az provider register --namespace Microsoft.EventHub
+az provider register --namespace Microsoft.KeyVault
+az provider register --namespace Microsoft.DocumentDB
+az provider register --namespace Microsoft.Insights
+az provider register --namespace Microsoft.ManagedIdentity
+az provider register --namespace Microsoft.App
+az provider register --namespace Microsoft.AlertsManagement
+```
+
+Registration may take a few minutes to complete. You only need to do this once per subscription.
+
 ## Variables
 - `env`: Environment name (dev, stage, prod)
 - `location`: Azure region

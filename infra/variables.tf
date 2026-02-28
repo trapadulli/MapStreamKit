@@ -16,7 +16,7 @@ variable "env" {
 variable "location" {
   type = string
   description = "Azure region"
-  default     = "eastus"
+  default     = "centralus"
 }
 
 variable "enable_replay" {
