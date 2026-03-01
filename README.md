@@ -3,6 +3,28 @@
 ## Overview
 MapStreamKit is an Azure-native event control plane for ingesting, normalizing, and exposing external API data streams. It leverages Azure Event Hubs, Cosmos DB, Blob Storage, and more, with all infrastructure managed via Terraform.
 
+## Quickstart
+Run from repository root:
+
+```sh
+# 0) First-time config setup (create local config files)
+cp infra-bootstrap/bootstrap.auto.tfvars.example infra-bootstrap/bootstrap.auto.tfvars
+cp infra/backend.hcl.example infra/backend.hcl
+cp infra/config.auto.tfvars.example infra/config.auto.tfvars
+
+# 1) Edit config values for your environment
+# - set your org/env/location
+# - ensure tfstate storage account name is globally unique
+# - keep names lowercase where required by Azure resources
+
+# 2) Authenticate once per session
+az login
+az account set --subscription "<SUBSCRIPTION_ID>"
+
+# 2) One-command full workflow (preflight + bootstrap + infra)
+./scripts/iac.sh dev all
+```
+
 ### Architecture
 ```
 MapStreamKit/
