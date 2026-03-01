@@ -25,6 +25,8 @@ az account set --subscription "<SUBSCRIPTION_ID>"
 ./scripts/iac.sh dev all
 ```
 
+Script details and rationale: [scripts/README.md](scripts/README.md)
+
 ### Architecture
 ```
 MapStreamKit/
