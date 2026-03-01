@@ -116,12 +116,12 @@ Each README contains the most up-to-date commands and configuration guidance for
 ---
 
 ## Roadmap
-Backlog index: [backlog/README.md](backlog/README.md)
+Backlog index: [Backlog](backlog/README.md)
 
 - [x] Core infra (Event Hubs, Cosmos, Storage, Key Vault, Identities)
-- [ ] Production hardening (security, networking, observability, guardrails) — [backlog/production-hardening/README.md](backlog/production-hardening/README.md)
-- [ ] Runtime code scaffolding (Functions, GraphQL) — [backlog/runtime-scaffolding/README.md](backlog/runtime-scaffolding/README.md)
-- [ ] Tooling (schema registry, GraphQL codegen) — [backlog/tooling/README.md](backlog/tooling/README.md)
+- [ ] Production hardening (security, networking, observability, guardrails) — [Production Hardening Backlog](backlog/production-hardening/README.md)
+- [ ] Runtime code scaffolding (Functions, GraphQL) — [Runtime Scaffolding Backlog](backlog/runtime-scaffolding/README.md)
+- [ ] Tooling (schema registry, GraphQL codegen) — [Tooling Backlog](backlog/tooling/README.md)
 
 ---
 
