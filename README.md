@@ -62,13 +62,13 @@ MapStreamKit/
                                                +-----------+-----------+
                                                            |
                                                            v
-                                                +----------------------+
-                                                | Azure Event Hubs     |
-                                                | hub: eh-msk-events   |
-                                                | CG: processor        |
-                                                +----------+-----------+
-                                                           |
-                                                           v
+                                                      +----------------------+
+                                                      | Azure Event Hubs     |
+                                                      | hub: eh-msk-events   |
+                                                      | CG: processor        |
+                                                      +----------+-----------+
+                                                               |
+                                                               v
 +------------------+      validate payload schema (Blob)  +----------------------+
 | Tail Processor   |<-------------------------------------| Storage (schemas)    |
 | (EventHub Func)  |                                      | dlq/checkpoints      |
