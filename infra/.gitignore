@@ -9,5 +9,9 @@ backend.hcl
 config.auto.tfvars
 *.auto.tfvars
 
+# Terraform plan artifacts
+*.tfplan
+.plans/
+
 # Local business config
 bootstrap.auto.tfvars
