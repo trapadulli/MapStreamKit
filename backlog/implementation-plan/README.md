@@ -25,7 +25,7 @@ Status legend: Planned | In Progress | Done | Blocked
 
 ### P0-02: Clarify dataflow semantics and naming
 - Priority: P0
-- Status: Planned
+- Status: Done
 - Tasks:
   - Update diagram labels to show direct Event Hubs -> Tail path.
   - Clarify that Storage is auxiliary for schema/checkpoints/DLQ.
@@ -151,6 +151,6 @@ Status legend: Planned | In Progress | Done | Blocked
   - Incident and change-management controls are operational.
 
 ## Immediate next actions
-1. Complete P0-02 documentation clarification in root README (diagram + naming).
-2. Create IaC task issue list for P1-01/P1-02/P1-03 with owners.
+1. Start P1-01 in Terraform: lock target hosting model (Adapter + Tail Function Apps, Head containerized path).
+2. Create IaC task issue list for P1-02/P1-03 with owners.
 3. Implement Adapter/Tail runtime skeletons against agreed contracts.
