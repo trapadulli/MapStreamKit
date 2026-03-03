@@ -3,6 +3,26 @@
 ## Overview
 MapStreamKit is an Azure-native event control plane for ingesting, normalizing, and exposing external API data streams. It leverages Azure Event Hubs, Cosmos DB, Blob Storage, and more, with all infrastructure managed via Terraform.
 
+## Prerequisites
+- [Terraform >= 1.5.0](https://www.terraform.io/downloads.html)
+- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+- Contributor access to the target Azure subscription
+- Adjust variables as needed for your environment.
+
+## Azure Resource Provider Registration (required)
+Before running Terraform, ensure your subscription is registered for required resource providers (one-time per subscription):
+
+```sh
+az provider register --namespace Microsoft.Storage
+az provider register --namespace Microsoft.EventHub
+az provider register --namespace Microsoft.KeyVault
+az provider register --namespace Microsoft.DocumentDB
+az provider register --namespace Microsoft.Insights
+az provider register --namespace Microsoft.ManagedIdentity
+az provider register --namespace Microsoft.App
+az provider register --namespace Microsoft.AlertsManagement
+```
+
 ## Quickstart
 Run from repository root:
 
@@ -55,53 +75,60 @@ MapStreamKit/
 
 ### Dataflow (MVP)
 ```
-+-------------------+       POST /events       +----------------------+
++-------------------+       POST /events       +-----------------------+
 | Head Pullers      |------------------------->| Adapter Ingress       |
-| (Azure Functions) |                          | (Function or Container|
-| - pull providers  |                          |  App)                 |
-| - build envelope  |                          | - validate envelope   |
-+-------------------+                          | - produce to Event Hub|
-                                               +-----------+-----------+
-                                                           |
-                                                           v
-                                                      +----------------------+
-                                                      | Azure Event Hubs     |
-                                                      | hub: eh-msk-events   |
-                                                      | CG: processor        |
-                                                      +----------+-----------+
-                                                               |
-                                                               v
-+------------------+      validate payload schema (Blob)  +----------------------+
-| Tail Processor   |<-------------------------------------| Storage (schemas)    |
-| (EventHub Func)  |                                      | dlq/checkpoints      |
-| - validate env   |                                      +----------------------+
-| - validate payload
-| - map canonical
-| - dedupe in Cosmos (id = f(dedupeKey))
-+---------+--------+
-          |
-          v
-+---------------------------+
-| Cosmos DB (serverless)    |
-| db: msk                   |
-| container: raw_envelopes  |
-| pk: /partitionKey         |
-+---------------------------+
+| (AF In Container) |                          | (Function App)        |
+| - pull providers  |                          | - validate envelope   | 
+| - build envelope  |                          | - produce to Event Hub|
++-------------------+                          +-----------+-----------+
+      ^                                                    |
+      |                                                    |
+      |                                                    v
+      |                                              +----------------------+
+      |                                              | Azure Event Hubs     |
+      |                                              | hub: eh-msk-events   |
+      |                                              | CG: processor        |
+      |                                              +----------+-----------+
+      |                                                         |
+      |                                                         v
+      |                                               +------------------+
+      |                                               | Tail Processor   |
+      |                                               | (EventHub Func)  |
+      |                                               | - validate env   |
+      |                                               | - validate payload
+      |                                               | - map canonical
+      |                                               | - dedupe in Cosmos (id = f(dedupeKey))
+      |                                               +---------+--------+
+      |     +---------------------------+                      /|
+      |     | Storage (dlq/checkpoints) |<--------------------/ |
+      |     +---------------------------+                       V
+      |                                               +---------------------------+
+      |                                               | Cosmos DB (serverless)    |
+      |                                               | db: msk                   |
+      |                                               | container: raw_envelopes  |
+      |                                               | pk: /partitionKey         |
+      |                                               +---------------------------+   
+      |                                                           ^
+      |                                                           |
+      V                                                           V
++---------------------------------+                   +------------------------------+   
+|      Registrar Job              |                   | Graph QL read/write          |          
+| - reads deploy events           |<----------------->| - Registrar triggered event  |         
+| - validates & updates contracts |                   | - registrar update schema    |
++---------------------------------+                   +---------------o--------------+
+            
 ```
+
+Naming note: Tail Processor is a backend Event Hubs consumer/mapper; client-facing reads are served by GraphQL.
 
 - All core Azure resources are provisioned via Terraform modules in `infra/`.
 - See each `.tf` file for resource details and outputs.
 
 ---
 
-## Prerequisites
-- [Terraform >= 1.5.0](https://www.terraform.io/downloads.html)
-- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-- Contributor access to the target Azure subscription
-- Adjust variables as needed for your environment.
 
 ## Getting Started
-To set up MapStreamKit infrastructure
+To set up MapStreamKit infrastructure step by step (if you don't want to use the Quickstart)
 1. Authenticate with Azure:
    ```sh
    az login
@@ -117,6 +144,7 @@ Each README contains the most up-to-date commands and configuration guidance for
 
 ## Roadmap
 Backlog index: [Backlog](backlog/README.md)
+Execution plan: [Implementation Plan](backlog/implementation-plan/README.md)
 
 - [x] Core infra (Event Hubs, Cosmos, Storage, Key Vault, Identities)
 - [ ] Production hardening (security, networking, observability, guardrails) — [Production Hardening Backlog](backlog/production-hardening/README.md)

@@ -54,13 +54,8 @@ output "key_vault_name" {
   value = azurerm_key_vault.kv.name
 }
 
-output "appinsights_functions_connection_string" {
+output "appinsights_connection_string" {
   value     = azurerm_application_insights.appi_functions.connection_string
-  sensitive = true
-}
-
-output "appinsights_gql_connection_string" {
-  value     = azurerm_application_insights.appi_gql.connection_string
   sensitive = true
 }
 

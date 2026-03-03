@@ -12,7 +12,6 @@ locals {
   # Observability
   law_name  = "law-${local.name_prefix}"
   appi_func = "appi-msk-func-${var.env}"
-  appi_gql  = "appi-msk-gql-${var.env}"
 
   # Uniqueness suffix (lowercase letters/digits)
   # KV and Cosmos allow hyphens; storage does not.
@@ -57,15 +56,6 @@ resource "azurerm_log_analytics_workspace" "law" {
 
 resource "azurerm_application_insights" "appi_functions" {
   name                = local.appi_func
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  application_type    = "web"
-  workspace_id        = azurerm_log_analytics_workspace.law.id
-  tags                = var.tags
-}
-
-resource "azurerm_application_insights" "appi_gql" {
-  name                = local.appi_gql
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   application_type    = "web"

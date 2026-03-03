@@ -6,6 +6,7 @@ Purpose: organize backlog workstreams by domain with dedicated README files.
 - [Production Hardening Backlog](production-hardening/README.md)
 - [Runtime Scaffolding Backlog](runtime-scaffolding/README.md)
 - [Tooling Backlog](tooling/README.md)
+- [Implementation Plan](implementation-plan/README.md)
 
 ## How to use
 - Keep priorities and status current in each track README.
