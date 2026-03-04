@@ -20,7 +20,7 @@ Status legend: Proposed | In Progress | Blocked | Done
 - Acceptance criteria:
   - Team can add and retrieve versioned schemas with documented commands.
 
-### T0-02: GraphQL codegen baseline
+### T0-02: GraphQL Consumer codegen baseline
 - Priority: P0
 - Status: Proposed
 - Deliverables:

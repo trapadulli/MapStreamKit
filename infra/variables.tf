@@ -41,3 +41,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "graphql_container_image" {
+  type        = string
+  description = "Container image for GraphQL Consumer host"
+  default     = "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
+}

@@ -35,13 +35,13 @@ Status legend: Proposed | In Progress | Blocked | Done
   - Identities are assigned broad Storage Blob roles at account scope.
 - Terraform change proposal:
   - Replace account-level assignments with container-scoped role assignments:
-    - ingest: contributor on schemas only.
-    - processor: reader on schemas; contributor on dlq/checkpoints.
+    - Adapter: contributor on schemas only.
+    - Tail Processor: reader on schemas; contributor on Dead Letter Queue/Checkpoint Store.
   - Keep least-privilege policy in role assignment resources.
 - Acceptance criteria:
   - No storage data-plane role assignment remains at full account scope for runtime identities.
-  - Ingest can write schemas only.
-  - Processor can read schemas and write checkpoints/dlq.
+  - Adapter can write schemas only.
+  - Tail Processor can read schemas and write Checkpoint Store/Dead Letter Queue.
 
 ### P0-03: Pin runtime images and remove placeholder container image
 - Priority: P0
@@ -50,8 +50,8 @@ Status legend: Proposed | In Progress | Blocked | Done
 - Current state:
   - Container App uses placeholder image with latest tag.
 - Terraform change proposal:
-  - Add variable adapter_image with immutable digest default format.
-  - Update azurerm_container_app.adapter_ingress to use approved registry image digest.
+  - Add variable head_image with immutable digest default format.
+  - Update Head Puller Container App to use approved registry image digest.
   - Add validation rule to block latest tag in production env.
 - Acceptance criteria:
   - Terraform config contains no latest runtime image tags.
@@ -70,7 +70,7 @@ Status legend: Proposed | In Progress | Blocked | Done
     - Function failures/exceptions.
     - Event Hub consumer lag / incoming-outgoing mismatch.
     - Cosmos RU throttling and high server-side latency.
-    - Storage error spikes for checkpoint/dlq paths.
+    - Storage error spikes for Checkpoint Store/Dead Letter Queue paths.
 - Acceptance criteria:
   - Alerts fire in test scenario and route to action group.
   - Alert severity and thresholds documented.

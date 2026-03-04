@@ -1,72 +1,7 @@
 # Compute shells for StreamMapKit runtime
 
 
-# Adapter Ingress host (Azure Container App)
-resource "azurerm_container_app" "adapter_ingress" {
-  name                = "ca-msk-adapter-${var.env}"
-  resource_group_name = azurerm_resource_group.rg.name
-  container_app_environment_id = azurerm_container_app_environment.msk_env.id
-  revision_mode       = "Single"
-  identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.adapter.id]
-  }
-  template {
-    container {
-      name   = "adapter"
-      image  = "mcr.microsoft.com/azuredocs/aci-helloworld:latest" # placeholder, replace with your image
-      cpu    = 0.5
-      memory = "1.0Gi"
-      env {
-        name  = "EVENTHUB_NAMESPACE"
-        value = azurerm_eventhub_namespace.ehns.name
-      }
-      env {
-        name  = "EVENTHUB_NAME"
-        value = azurerm_eventhub.events.name
-      }
-      env {
-        name  = "EVENTHUB_CONSUMER_GROUP"
-        value = azurerm_eventhub_consumer_group.processor.name
-      }
-      env {
-        name  = "COSMOS_ENDPOINT"
-        value = azurerm_cosmosdb_account.cosmos.endpoint
-      }
-      env {
-        name  = "COSMOS_DB"
-        value = azurerm_cosmosdb_sql_database.db.name
-      }
-      env {
-        name  = "COSMOS_CONTAINER"
-        value = azurerm_cosmosdb_sql_container.raw_envelopes.name
-      }
-      env {
-        name  = "STORAGE_ACCOUNT"
-        value = azurerm_storage_account.st.name
-      }
-      env {
-        name  = "STORAGE_SCHEMAS_CONTAINER"
-        value = azurerm_storage_container.schemas.name
-      }
-      env {
-        name  = "STORAGE_DLQ_CONTAINER"
-        value = azurerm_storage_container.dlq.name
-      }
-      env {
-        name  = "STORAGE_CHECKPOINTS_CONTAINER"
-        value = azurerm_storage_container.checkpoints.name
-      }
-      env {
-        name  = "APPINSIGHTS_CONNECTION_STRING"
-        value = azurerm_application_insights.appi_functions.connection_string
-      }
-    }
-  }
-  tags = var.tags
-}
-
-# Container App Environment for Adapter
+# Container App Environment for Head pullers
 resource "azurerm_container_app_environment" "msk_env" {
   name                = "cae-msk-${var.env}"
   location            = azurerm_resource_group.rg.location
@@ -75,8 +10,98 @@ resource "azurerm_container_app_environment" "msk_env" {
   tags                = var.tags
 }
 
-resource "azurerm_linux_function_app" "head_puller" {
-  name                     = "fa-msk-head-${var.env}"
+# Head pullers host (Azure Container App)
+resource "azurerm_container_app" "head_puller" {
+  name                         = "ca-msk-head-${var.env}"
+  resource_group_name          = azurerm_resource_group.rg.name
+  container_app_environment_id = azurerm_container_app_environment.msk_env.id
+  revision_mode                = "Single"
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.ingest.id]
+  }
+
+  template {
+    container {
+      name   = "head"
+      image  = "mcr.microsoft.com/azuredocs/aci-helloworld:latest" # placeholder, replace with your image
+      cpu    = 0.5
+      memory = "1.0Gi"
+
+      env {
+        name  = "APPINSIGHTS_CONNECTION_STRING"
+        value = azurerm_application_insights.appi_functions.connection_string
+      }
+    }
+  }
+
+  tags = var.tags
+}
+
+# GraphQL Consumer host (Azure Container App)
+resource "azurerm_container_app" "graphql_consumer" {
+  name                         = "ca-msk-graphql-${var.env}"
+  resource_group_name          = azurerm_resource_group.rg.name
+  container_app_environment_id = azurerm_container_app_environment.msk_env.id
+  revision_mode                = "Single"
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.gql.id]
+  }
+
+  ingress {
+    external_enabled = true
+    target_port      = 4000
+    transport        = "auto"
+
+    traffic_weight {
+      percentage      = 100
+      latest_revision = true
+    }
+  }
+
+  template {
+    container {
+      name   = "graphql"
+      image  = var.graphql_container_image
+      cpu    = 0.5
+      memory = "1.0Gi"
+
+      env {
+        name  = "PORT"
+        value = "4000"
+      }
+
+      env {
+        name  = "COSMOS_ENDPOINT"
+        value = azurerm_cosmosdb_account.cosmos.endpoint
+      }
+
+      env {
+        name  = "COSMOS_DB"
+        value = azurerm_cosmosdb_sql_database.db.name
+      }
+
+      env {
+        name  = "COSMOS_CONTAINER"
+        value = azurerm_cosmosdb_sql_container.raw_envelopes.name
+      }
+
+      env {
+        name  = "APPINSIGHTS_CONNECTION_STRING"
+        value = azurerm_application_insights.appi_functions.connection_string
+      }
+    }
+  }
+
+  tags = var.tags
+}
+
+# Adapter Ingress host (Azure Function App)
+resource "azurerm_linux_function_app" "adapter_ingress" {
+  name                       = "fa-msk-adapter-${var.env}"
   location                 = azurerm_resource_group.rg.location
   resource_group_name      = azurerm_resource_group.rg.name
   service_plan_id          = azurerm_service_plan.func.id
@@ -84,21 +109,18 @@ resource "azurerm_linux_function_app" "head_puller" {
   storage_account_access_key = azurerm_storage_account.st.primary_access_key
   identity {
     type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.ingest.id]
+    identity_ids = [azurerm_user_assigned_identity.adapter.id]
   }
+
   site_config {
     application_stack {
       node_version = "18"
     }
   }
+
   app_settings = {
     EVENTHUB_NAMESPACE            = azurerm_eventhub_namespace.ehns.name
     EVENTHUB_NAME                 = azurerm_eventhub.events.name
-    COSMOS_ENDPOINT               = azurerm_cosmosdb_account.cosmos.endpoint
-    COSMOS_DB                     = azurerm_cosmosdb_sql_database.db.name
-    COSMOS_CONTAINER              = azurerm_cosmosdb_sql_container.raw_envelopes.name
-    STORAGE_ACCOUNT               = azurerm_storage_account.st.name
-    STORAGE_SCHEMAS_CONTAINER     = azurerm_storage_container.schemas.name
     APPINSIGHTS_CONNECTION_STRING = azurerm_application_insights.appi_functions.connection_string
     AzureWebJobsStorage           = azurerm_storage_account.st.primary_connection_string
     FUNCTIONS_EXTENSION_VERSION   = "~4"

@@ -5,10 +5,10 @@ Purpose: track implementation work for runtime services in `runtime/`.
 Status legend: Proposed | In Progress | Blocked | Done
 
 ## Scope
-- `runtime/head` (provider pullers / envelope creation)
-- `runtime/adapter` (ingress API to Event Hubs)
-- `runtime/tail` (Event Hub processing to canonical store)
-- `runtime/graphql` (read API over canonical model)
+- `runtime/head` (Head Puller provider integrations / envelope creation)
+- `runtime/adapter` (Adapter API to Event Hubs)
+- `runtime/tail` (Tail Processor from Event Hub to Canonical Store)
+- `runtime/graphql` (GraphQL Consumer over canonical model)
 
 ## Now (MVP)
 
@@ -23,7 +23,7 @@ Status legend: Proposed | In Progress | Blocked | Done
   - Each runtime folder has runnable scaffold.
   - Local startup succeeds with documented env vars.
 
-### R0-02: Implement Adapter ingress skeleton
+### R0-02: Implement Adapter skeleton
 - Priority: P0
 - Status: Proposed
 - Deliverables:
@@ -34,7 +34,7 @@ Status legend: Proposed | In Progress | Blocked | Done
   - Valid request returns success and emits event.
   - Invalid request returns typed validation errors.
 
-### R0-03: Implement Tail processor skeleton
+### R0-03: Implement Tail Processor skeleton
 - Priority: P0
 - Status: Proposed
 - Deliverables:
@@ -42,12 +42,12 @@ Status legend: Proposed | In Progress | Blocked | Done
   - Envelope validation + mapping placeholder.
   - Cosmos write path with dedupe key strategy.
 - Acceptance criteria:
-  - Incoming test events are processed and written to Cosmos.
-  - Invalid events are redirected to DLQ path.
+  - Incoming test events are processed and written to Canonical Store.
+  - Invalid events are redirected to Dead Letter Queue path.
 
 ## Next
 
-### R1-01: Implement Head pullers baseline
+### R1-01: Implement Head Pullers baseline
 - Priority: P1
 - Status: Proposed
 - Deliverables:
@@ -56,7 +56,7 @@ Status legend: Proposed | In Progress | Blocked | Done
 - Acceptance criteria:
   - At least one provider integration produces valid events.
 
-### R1-02: Add GraphQL read API scaffold
+### R1-02: Add GraphQL Consumer scaffold
 - Priority: P1
 - Status: Proposed
 - Deliverables:

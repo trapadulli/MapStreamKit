@@ -47,6 +47,23 @@ az account set --subscription "<SUBSCRIPTION_ID>"
 
 Script details and rationale: [scripts/README.md](scripts/README.md)
 
+## GraphQL Consumer: code + deploy workflow
+
+GraphQL runtime code is now in `runtime/graphql/`.
+
+Local release (build + push + Terraform deploy in one command):
+
+```sh
+./scripts/release-graphql.sh dev <acr_name> [image_tag]
+```
+
+This script will:
+1. Build `runtime/graphql/Dockerfile`
+2. Push image to `<acr_name>.azurecr.io/msk-graphql:<tag>`
+3. Deploy infra with `TF_VAR_graphql_container_image` set to that image
+
+CI release workflow is available at `.github/workflows/graphql-release.yml` and can be run manually via GitHub Actions `workflow_dispatch`.
+
 ### Architecture
 ```
 MapStreamKit/
@@ -64,10 +81,10 @@ MapStreamKit/
 │  ├─ backend.tf                  # declares azurerm backend (configured via backend.hcl)
 │  └─ .gitignore                  # or root .gitignore
 ├─ runtime/
-│  ├─ head/                       # Azure Functions: pull external APIs, build envelopes, POST ingress
-│  ├─ adapter/                    # Adapter Ingress: POST /events -> Event Hubs (internal-only)
-│  ├─ tail/                       # Azure Functions: EventHubTrigger -> validate -> map -> Cosmos
-│  └─ graphql/                    # GraphQL API (later): reads canonical Cosmos + Redis
+│  ├─ head/                       # Head Puller: pull external APIs, build envelopes, POST to Adapter
+│  ├─ adapter/                    # Adapter: POST /events -> Event Hubs (internal-only)
+│  ├─ tail/                       # Tail Processor: EventHubTrigger -> validate -> map -> Canonical Store
+│  └─ graphql/                    # GraphQL Consumer runtime + Dockerfile
 └─ tooling/
    ├─ schema-registry/            # (later) manage payload schemas (Blob)
    └─ graphql-gen/                # (later) generate GraphQL/types from canonical model
@@ -76,7 +93,7 @@ MapStreamKit/
 ### Dataflow (MVP)
 ```
 +-------------------+       POST /events       +-----------------------+
-| Head Pullers      |------------------------->| Adapter Ingress       |
+| Head Pullers      |------------------------->| Adapter               |
 | (AF In Container) |                          | (Function App)        |
 | - pull providers  |                          | - validate envelope   | 
 | - build envelope  |                          | - produce to Event Hub|
@@ -100,10 +117,10 @@ MapStreamKit/
       |                                               | - dedupe in Cosmos (id = f(dedupeKey))
       |                                               +---------+--------+
       |     +---------------------------+                      /|
-      |     | Storage (dlq/checkpoints) |<--------------------/ |
+      |     | Checkpoint Store + DLQ    |<--------------------/ |
       |     +---------------------------+                       V
       |                                               +---------------------------+
-      |                                               | Cosmos DB (serverless)    |
+      |                                               | Canonical Store (Cosmos)  |
       |                                               | db: msk                   |
       |                                               | container: raw_envelopes  |
       |                                               | pk: /partitionKey         |
@@ -112,14 +129,14 @@ MapStreamKit/
       |                                                           |
       V                                                           V
 +---------------------------------+                   +------------------------------+   
-|      Registrar Job              |                   | Graph QL read/write          |          
-| - reads deploy events           |<----------------->| - Registrar triggered event  |         
-| - validates & updates contracts |                   | - registrar update schema    |
+|      Registrar Job              |                   | GraphQL Consumer             |          
+| - reads deploy events           |<----------------->| - consumes registrar updates |         
+| - validates & updates contracts |                   | - refreshes query schema     |
 +---------------------------------+                   +---------------o--------------+
             
 ```
 
-Naming note: Tail Processor is a backend Event Hubs consumer/mapper; client-facing reads are served by GraphQL.
+Naming note: Tail Processor is a backend Event Hubs consumer/mapper; client-facing reads are served by the GraphQL Consumer.
 
 - All core Azure resources are provisioned via Terraform modules in `infra/`.
 - See each `.tf` file for resource details and outputs.
@@ -148,7 +165,7 @@ Execution plan: [Implementation Plan](backlog/implementation-plan/README.md)
 
 - [x] Core infra (Event Hubs, Cosmos, Storage, Key Vault, Identities)
 - [ ] Production hardening (security, networking, observability, guardrails) — [Production Hardening Backlog](backlog/production-hardening/README.md)
-- [ ] Runtime code scaffolding (Functions, GraphQL) — [Runtime Scaffolding Backlog](backlog/runtime-scaffolding/README.md)
+- [ ] Runtime code scaffolding (Head Puller, Adapter, Tail Processor, GraphQL Consumer) — [Runtime Scaffolding Backlog](backlog/runtime-scaffolding/README.md)
 - [ ] Tooling (schema registry, GraphQL codegen) — [Tooling Backlog](backlog/tooling/README.md)
 
 ---

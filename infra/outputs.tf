@@ -54,6 +54,14 @@ output "key_vault_name" {
   value = azurerm_key_vault.kv.name
 }
 
+output "graphql_container_app_name" {
+  value = azurerm_container_app.graphql_consumer.name
+}
+
+output "graphql_container_app_fqdn" {
+  value = azurerm_container_app.graphql_consumer.latest_revision_fqdn
+}
+
 output "appinsights_connection_string" {
   value     = azurerm_application_insights.appi_functions.connection_string
   sensitive = true
@@ -71,7 +79,6 @@ output "uami_processor_client_id" {
 output "uami_gql_client_id" {
   value = azurerm_user_assigned_identity.gql.client_id
 }
-
 output "uami_ingest_principal_id" {
   value = azurerm_user_assigned_identity.ingest.principal_id
 }

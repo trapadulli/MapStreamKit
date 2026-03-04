@@ -3,10 +3,10 @@
 Purpose: provide an execution-ready task plan for the agreed target architecture and delivery order.
 
 Target runtime topology:
-- Head pullers: Container Apps (source-side fetchers)
+- Head Pullers: Container Apps (source-side fetchers)
 - Adapter: Function App (trusted ingress funnel to Event Hubs)
-- Tail: Function App (Event Hubs consumer to Cosmos)
-- GraphQL: client-facing query API over canonical data
+- Tail Processor: Function App (Event Hubs consumer to Canonical Store)
+- GraphQL Consumer: client-facing query API over canonical data
 - Contract registry flow: deploy-time registration + versioned schema artifacts + update signaling
 
 Status legend: Planned | In Progress | Done | Blocked
@@ -28,8 +28,8 @@ Status legend: Planned | In Progress | Done | Blocked
 - Status: Done
 - Tasks:
   - Update diagram labels to show direct Event Hubs -> Tail path.
-  - Clarify that Storage is auxiliary for schema/checkpoints/DLQ.
-  - Add naming note: Tail Processor is backend processor, GraphQL is client API.
+  - Clarify that Storage is auxiliary for schema, Checkpoint Store, and Dead Letter Queue.
+  - Add naming note: Tail Processor is backend processor, GraphQL Consumer is the client API.
 - Acceptance criteria:
   - No ambiguity in README dataflow around Event Hubs/Storage/Tail roles.
 
@@ -37,7 +37,7 @@ Status legend: Planned | In Progress | Done | Blocked
 
 ### P1-01: Lock target hosting model in Terraform
 - Priority: P0
-- Status: Planned
+- Status: Done
 - Tasks:
   - Keep Adapter + Tail as Function Apps in Terraform.
   - Keep/validate App Service Plan dependency for those Function Apps.
@@ -45,21 +45,24 @@ Status legend: Planned | In Progress | Done | Blocked
 - Acceptance criteria:
   - Terraform resources match target topology without contradictory placeholders.
 
-### P1-02: Contract registry storage primitives
+### P1-02: Deploy-time contract publication workflow
 - Priority: P0
-- Status: Planned
+- Status: In Progress
 - Tasks:
-  - Add schema metadata store (Table Storage or equivalent).
-  - Define versioned schema artifact location conventions.
-  - Add IAM role assignments for registry writer/reader identities.
+  - Draft and review P1-02 control-plane spec.
+  - Define deploy-time contract publication artifacts and version conventions.
+  - Define where generated GraphQL artifacts are written and approved.
+  - Keep runtime path independent from contract metadata table lookups.
+- Spec:
+  - [P1-02 Contract Publication Spec](P1-02-contract-publication-spec.md)
 - Acceptance criteria:
-  - Registry metadata and schema artifacts can be written/read via managed identity.
+  - Contract publication is deploy-time and does not add runtime Table Storage dependency.
 
 ### P1-03: Runtime config and identity wiring
 - Priority: P0
 - Status: Planned
 - Tasks:
-  - Standardize env vars for Adapter/Tail/Head around schema references.
+  - Standardize env vars for Adapter/Tail Processor/Head Puller around schema references.
   - Ensure least-privilege RBAC at container/data scope.
   - Validate Event Hub sender/receiver roles and Cosmos permissions.
 - Acceptance criteria:
@@ -68,7 +71,7 @@ Status legend: Planned | In Progress | Done | Blocked
 
 ## Phase 2 — Runtime implementation
 
-### P2-01: Adapter minimal ingress contract
+### P2-01: Adapter minimal contract
 - Priority: P0
 - Status: Planned
 - Tasks:
@@ -78,19 +81,19 @@ Status legend: Planned | In Progress | Done | Blocked
 - Acceptance criteria:
   - Valid envelopes publish successfully; invalid envelopes fail with typed errors.
 
-### P2-02: Tail processing contract enforcement
+### P2-02: Tail Processor contract enforcement
 - Priority: P0
 - Status: Planned
 - Tasks:
   - Consume Event Hubs using processor consumer group.
   - Resolve schema by version reference and validate payload.
-  - Apply dedupe and canonical mapping, then write to Cosmos.
-  - Route failures to DLQ and persist checkpoints.
+  - Apply dedupe and canonical mapping, then write to Canonical Store.
+  - Route failures to Dead Letter Queue and persist checkpoints.
 - Acceptance criteria:
   - Replay-safe processing with no duplicate canonical writes.
   - Invalid messages are visible in DLQ with diagnostics.
 
-### P2-03: Head pullers as source adapters
+### P2-03: Head Pullers as source adapters
 - Priority: P1
 - Status: Planned
 - Tasks:
@@ -151,6 +154,6 @@ Status legend: Planned | In Progress | Done | Blocked
   - Incident and change-management controls are operational.
 
 ## Immediate next actions
-1. Start P1-01 in Terraform: lock target hosting model (Adapter + Tail Function Apps, Head containerized path).
-2. Create IaC task issue list for P1-02/P1-03 with owners.
-3. Implement Adapter/Tail runtime skeletons against agreed contracts.
+1. Start P1-03 in Terraform: standardize runtime config and tighten identity scopes.
+2. Implement Adapter/Tail runtime skeletons against agreed contracts.
+3. Execute and validate the manual dev registrar workflow from the P1-02 spec.

@@ -13,6 +13,7 @@ Key rationale:
 
 ## Script location
 - `scripts/iac.sh`
+- `scripts/release-graphql.sh`
 
 ## Quickstart
 Run from repository root:
@@ -94,3 +95,39 @@ If you run from inside `infra/`, `./scripts/iac.sh` will not resolve.
 Use either:
 - run from repo root: `./scripts/iac.sh dev plan`
 - or from `infra/`: `../scripts/iac.sh dev plan`
+
+## GraphQL image release workflow
+
+Use this when GraphQL runtime code changes and you want to roll a new Container App revision.
+
+### Local one-command release
+
+```sh
+./scripts/release-graphql.sh <environment> <acr_name> [image_tag]
+```
+
+Examples:
+
+```sh
+./scripts/release-graphql.sh dev myacr
+./scripts/release-graphql.sh dev myacr 2026-03-03.1
+```
+
+What it does:
+- Builds `runtime/graphql` image.
+- Pushes to `<acr_name>.azurecr.io/msk-graphql:<tag>`.
+- Runs `./scripts/iac.sh <environment> infra` with `TF_VAR_graphql_container_image` set.
+
+### CI workflow (GitHub Actions)
+
+Workflow file: `.github/workflows/graphql-release.yml`
+
+Required repo secrets:
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
+
+Trigger with `workflow_dispatch` inputs:
+- `environment` (for script target env)
+- `acr_name`
+- `image_tag` (optional, defaults to short commit SHA)

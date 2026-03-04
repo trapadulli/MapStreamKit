@@ -268,6 +268,7 @@ resource "azurerm_role_assignment" "st_blob_contrib_processor" {
   principal_id         = azurerm_user_assigned_identity.processor.principal_id
 }
 
+# Contract registry storage access
 # Cosmos
 // ...existing code...
 
