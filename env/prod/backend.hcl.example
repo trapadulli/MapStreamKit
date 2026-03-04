@@ -1,4 +1,4 @@
 resource_group_name  = "rg-yourorg-tfstate"
 storage_account_name = "styourorgtfstate123"
 container_name       = "tfstate"
-key                  = "msk-dev.tfstate"
+key                  = "msk-prod.tfstate"

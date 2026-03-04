@@ -33,8 +33,8 @@ Registration may take a few minutes to complete. You only need to do this once p
 ## Usage
 Create local config files (do not commit):  
 (steps assume you are Azure authenticated as pointed out in root README.md)
-1. Copy `backend.hcl.example` → `backend.hcl`
-2. Copy `config.auto.tfvars.example` → `config.auto.tfvars`
+1. Copy `../env/dev/backend.hcl.example` → `../env/dev/backend.hcl`
+2. Copy `../env/dev/dev.tfvars.example` → `../env/dev/dev.tfvars`
 3. Edit values as needed.
 4. Initialize and apply Terraform:
    ```sh

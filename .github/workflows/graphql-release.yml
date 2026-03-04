@@ -21,6 +21,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
     env:
       TF_IN_AUTOMATION: true
     steps:
@@ -54,9 +55,38 @@ jobs:
 
           echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
 
+      - name: Generate Terraform config files from environment vars
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TARGET_ENV="${{ github.event.inputs.environment }}"
+          mkdir -p "env/${TARGET_ENV}"
+
+          : "${{ vars.TF_BACKEND_RESOURCE_GROUP }}"
+          : "${{ vars.TF_BACKEND_STORAGE_ACCOUNT }}"
+          : "${{ vars.TF_BACKEND_CONTAINER }}"
+          : "${{ vars.TF_BACKEND_KEY }}"
+          : "${{ vars.TF_ORG }}"
+          : "${{ vars.TF_LOCATION }}"
+
+          cat > "env/${TARGET_ENV}/backend.hcl" <<EOF
+          resource_group_name  = "${{ vars.TF_BACKEND_RESOURCE_GROUP }}"
+          storage_account_name = "${{ vars.TF_BACKEND_STORAGE_ACCOUNT }}"
+          container_name       = "${{ vars.TF_BACKEND_CONTAINER }}"
+          key                  = "${{ vars.TF_BACKEND_KEY }}"
+          EOF
+
+          cat > "env/${TARGET_ENV}/${TARGET_ENV}.tfvars" <<EOF
+          org      = "${{ vars.TF_ORG }}"
+          env      = "${TARGET_ENV}"
+          location = "${{ vars.TF_LOCATION }}"
+          graphql_container_image = "${IMAGE_URI}"
+          EOF
+
       - name: Terraform deploy
         shell: bash
         run: |
           set -euo pipefail
           chmod +x scripts/iac.sh
-          TF_VAR_graphql_container_image="$IMAGE_URI" ./scripts/iac.sh "${{ github.event.inputs.environment }}" infra
+          ./scripts/iac.sh "${{ github.event.inputs.environment }}" infra

@@ -21,8 +21,8 @@ Run from repository root:
 ```sh
 # 0) First-time config setup (create local config files)
 cp infra-bootstrap/bootstrap.auto.tfvars.example infra-bootstrap/bootstrap.auto.tfvars
-cp infra/backend.hcl.example infra/backend.hcl
-cp infra/config.auto.tfvars.example infra/config.auto.tfvars
+cp env/dev/backend.hcl.example env/dev/backend.hcl
+cp env/dev/dev.tfvars.example env/dev/dev.tfvars
 
 # 1) Edit config values for your environment
 # - set your org/env/location
@@ -73,11 +73,9 @@ The script resolves files in this order.
 
 Backend config:
 1. `env/<environment>/backend.hcl`
-2. `infra/backend.hcl`
 
 Terraform variables:
 1. `env/<environment>/<environment>.tfvars`
-2. `infra/config.auto.tfvars`
 
 Bootstrap variables:
 1. `env/<environment>/bootstrap.tfvars`
@@ -122,12 +120,24 @@ What it does:
 
 Workflow file: `.github/workflows/graphql-release.yml`
 
+The workflow is environment-aware and should use GitHub Environments (`dev`, `stage`, `prod`).
+
 Required repo secrets:
 - `AZURE_CLIENT_ID`
 - `AZURE_TENANT_ID`
 - `AZURE_SUBSCRIPTION_ID`
 
+Required GitHub Environment variables:
+- `TF_BACKEND_RESOURCE_GROUP`
+- `TF_BACKEND_STORAGE_ACCOUNT`
+- `TF_BACKEND_CONTAINER`
+- `TF_BACKEND_KEY`
+- `TF_ORG`
+- `TF_LOCATION`
+
 Trigger with `workflow_dispatch` inputs:
 - `environment` (for script target env)
 - `acr_name`
 - `image_tag` (optional, defaults to short commit SHA)
+
+At runtime, the workflow generates local `env/<environment>/backend.hcl` and `env/<environment>/<environment>.tfvars` from these environment values and then runs `./scripts/iac.sh <environment> infra`.

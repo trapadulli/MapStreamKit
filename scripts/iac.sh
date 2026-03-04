@@ -18,11 +18,9 @@ Actions:
 Environment file resolution order:
   Backend config:
     1) env/<environment>/backend.hcl
-    2) infra/backend.hcl
 
   Terraform vars:
     1) env/<environment>/<environment>.tfvars
-    2) infra/config.auto.tfvars
 
 Examples:
   ./scripts/iac.sh dev all
@@ -54,32 +52,23 @@ ENV_DIR="$REPO_ROOT/env/$ENVIRONMENT"
 ENV_BACKEND_FILE="$ENV_DIR/backend.hcl"
 ENV_TFVARS_FILE="$ENV_DIR/${ENVIRONMENT}.tfvars"
 
-LEGACY_BACKEND_FILE="$INFRA_DIR/backend.hcl"
-LEGACY_TFVARS_FILE="$INFRA_DIR/config.auto.tfvars"
-
 ENV_BOOTSTRAP_TFVARS_FILE="$ENV_DIR/bootstrap.tfvars"
 LEGACY_BOOTSTRAP_TFVARS_FILE="$BOOTSTRAP_DIR/bootstrap.auto.tfvars"
 
 resolve_infra_files() {
   if [[ -f "$ENV_BACKEND_FILE" ]]; then
     BACKEND_FILE="$ENV_BACKEND_FILE"
-  elif [[ -f "$LEGACY_BACKEND_FILE" ]]; then
-    BACKEND_FILE="$LEGACY_BACKEND_FILE"
   else
-    echo "Error: backend config not found. Expected one of:"
+    echo "Error: backend config not found. Expected:"
     echo "  - $ENV_BACKEND_FILE"
-    echo "  - $LEGACY_BACKEND_FILE"
     exit 1
   fi
 
   if [[ -f "$ENV_TFVARS_FILE" ]]; then
     TFVARS_FILE="$ENV_TFVARS_FILE"
-  elif [[ -f "$LEGACY_TFVARS_FILE" ]]; then
-    TFVARS_FILE="$LEGACY_TFVARS_FILE"
   else
-    echo "Error: tfvars not found. Expected one of:"
+    echo "Error: tfvars not found. Expected:"
     echo "  - $ENV_TFVARS_FILE"
-    echo "  - $LEGACY_TFVARS_FILE"
     exit 1
   fi
 }
@@ -98,7 +87,7 @@ resolve_bootstrap_file() {
 }
 
 run_init() {
-  terraform -chdir="$INFRA_DIR" init -backend-config="$BACKEND_FILE"
+  terraform -chdir="$INFRA_DIR" init -reconfigure -backend-config="$BACKEND_FILE"
 }
 
 run_bootstrap() {

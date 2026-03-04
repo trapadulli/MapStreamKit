@@ -1,0 +1,4 @@
+org      = "yourorg"
+env      = "stage"
+location = "centralus"
+graphql_container_image = "mcr.microsoft.com/azuredocs/aci-helloworld:latest"

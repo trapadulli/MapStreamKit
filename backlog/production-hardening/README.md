@@ -21,7 +21,7 @@ Status legend: Proposed | In Progress | Blocked | Done
   - In infra/main.tf:
     - set soft_delete_retention_days to >= 30
     - set purge_protection_enabled = true
-  - Add variable toggles and environment-specific defaults in infra/variables.tf + config.auto.tfvars.example.
+  - Add variable toggles and environment-specific defaults in infra/variables.tf + env/<env>/*.tfvars.example.
 - Acceptance criteria:
   - terraform plan shows Key Vault hardening changes only.
   - Key Vault has purge protection enabled after apply.

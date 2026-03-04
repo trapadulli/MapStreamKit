@@ -1,4 +1,0 @@
-org      = "yourorg"
-env      = "dev"
-location = "eastus"
-graphql_container_image = "mcr.microsoft.com/azuredocs/aci-helloworld:latest"

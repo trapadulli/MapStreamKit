@@ -16,3 +16,7 @@ pnpm-debug.log*
 **/*.tfplan
 **/crash.log
 infra/.plans/
+
+# Environment-local Terraform config
+env/**/backend.hcl
+env/**/*.tfvars

@@ -29,8 +29,8 @@ Run from repository root:
 ```sh
 # 0) First-time config setup (create local config files)
 cp infra-bootstrap/bootstrap.auto.tfvars.example infra-bootstrap/bootstrap.auto.tfvars
-cp infra/backend.hcl.example infra/backend.hcl
-cp infra/config.auto.tfvars.example infra/config.auto.tfvars
+cp env/dev/backend.hcl.example env/dev/backend.hcl
+cp env/dev/dev.tfvars.example env/dev/dev.tfvars
 
 # 1) Edit config values for your environment
 # - set your org/env/location
