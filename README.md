@@ -175,7 +175,9 @@ MapStreamKit/
 
 ### Dataflow (MVP)
 ```
-+-------------------+       POST /events       +-----------------------+
+        V V V
+         \|/
++---------o---------+       POST /events       +-----------------------+
 | Head Pullers      |------------------------->| Adapter               |
 | (AF In Container) |                          | (Function App)        |
 | - pull providers  |                          | - validate envelope   | 
@@ -215,8 +217,9 @@ MapStreamKit/
 |      Registrar Job              |                   | GraphQL Consumer             |          
 | - reads deploy events           |<----------------->| - consumes registrar updates |         
 | - validates & updates contracts |                   | - refreshes query schema     |
-+---------------------------------+                   +---------------o--------------+
-            
++---------------------------------+                   +--------------o---------------+
+                                                                    /|\ 
+                                                                   V V V
 ```
 
 Naming note: Tail Processor is a backend Event Hubs consumer/mapper; client-facing reads are served by the GraphQL Consumer.
