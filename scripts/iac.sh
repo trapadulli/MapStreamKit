@@ -98,7 +98,13 @@ run_bootstrap() {
 
 run_plan() {
   mkdir -p "$PLAN_DIR"
-  terraform -chdir="$INFRA_DIR" plan -var-file="$TFVARS_FILE" -out="$PLAN_FILE"
+  local -a extra_plan_args=()
+  if [[ -n "${IAC_TERRAFORM_PLAN_ARGS:-}" ]]; then
+    # shellcheck disable=SC2206
+    extra_plan_args=(${IAC_TERRAFORM_PLAN_ARGS})
+  fi
+
+  terraform -chdir="$INFRA_DIR" plan -var-file="$TFVARS_FILE" "${extra_plan_args[@]}" -out="$PLAN_FILE"
   echo "Plan file created: $PLAN_FILE"
 }
 

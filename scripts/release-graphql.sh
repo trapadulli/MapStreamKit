@@ -113,17 +113,18 @@ fi
 IMAGE_REPO="${ACR_NAME}.azurecr.io/msk-graphql"
 IMAGE_URI="${IMAGE_REPO}:${IMAGE_TAG}"
 
-if command -v docker >/dev/null 2>&1; then
+if command -v docker >/dev/null 2>&1 && docker buildx version >/dev/null 2>&1; then
   echo "Logging in to ACR: $ACR_NAME"
   az acr login -n "$ACR_NAME"
 
-  echo "Building image locally with Docker: $IMAGE_URI"
-  docker build -t "$IMAGE_URI" "$GRAPHQL_DIR"
-
-  echo "Pushing image: $IMAGE_URI"
-  docker push "$IMAGE_URI"
+  echo "Building and pushing linux/amd64 image with Docker Buildx: $IMAGE_URI"
+  docker buildx build \
+    --platform linux/amd64 \
+    -t "$IMAGE_URI" \
+    --push \
+    "$GRAPHQL_DIR"
 else
-  echo "Docker not found. Using remote ACR build for: $IMAGE_URI"
+  echo "Docker Buildx not available. Using remote ACR build for: $IMAGE_URI"
   az acr build \
     --registry "$ACR_NAME" \
     --image "msk-graphql:${IMAGE_TAG}" \
@@ -133,13 +134,12 @@ fi
 echo "Deploying infra with graphql_container_image=$IMAGE_URI"
 (
   cd "$REPO_ROOT"
-  EXISTING_PLAN_ARGS="${TF_CLI_ARGS_plan:-}"
-  EXTRA_PLAN_ARG="-var=graphql_container_image=${IMAGE_URI}"
-  if [[ -n "$EXISTING_PLAN_ARGS" ]]; then
-    TF_CLI_ARGS_plan="$EXISTING_PLAN_ARGS $EXTRA_PLAN_ARG" ./scripts/iac.sh "$ENVIRONMENT" infra
-  else
-    TF_CLI_ARGS_plan="$EXTRA_PLAN_ARG" ./scripts/iac.sh "$ENVIRONMENT" infra
+  CURRENT_HEAD_IMAGE="$(az containerapp show -g "rg-msk-${ENVIRONMENT}" -n "ca-msk-head-${ENVIRONMENT}" --query "properties.template.containers[0].image" -o tsv 2>/dev/null || true)"
+  PLAN_ARGS="-var=graphql_container_image=${IMAGE_URI}"
+  if [[ -n "$CURRENT_HEAD_IMAGE" ]]; then
+    PLAN_ARGS="$PLAN_ARGS -var=head_container_image=${CURRENT_HEAD_IMAGE}"
   fi
+  IAC_TERRAFORM_PLAN_ARGS="$PLAN_ARGS" ./scripts/iac.sh "$ENVIRONMENT" infra
 )
 
 echo "Release completed."
