@@ -47,22 +47,41 @@ az account set --subscription "<SUBSCRIPTION_ID>"
 
 Script details and rationale: [scripts/README.md](scripts/README.md)
 
-## GraphQL Consumer: code + deploy workflow
+## Runtime release workflows
 
-GraphQL runtime code is now in `runtime/graphql/`.
+Release scripts run from repository root.
 
-Local release (build + push + Terraform deploy in one command):
+Prerequisite: infrastructure must already exist for the target environment.
 
 ```sh
-./scripts/release-graphql.sh dev <acr_name> [image_tag]
+./scripts/iac.sh dev infra
 ```
 
-This script will:
-1. Build `runtime/graphql/Dockerfile`
-2. Push image to `<acr_name>.azurecr.io/msk-graphql:<tag>`
-3. Deploy infra with `TF_VAR_graphql_container_image` set to that image
+Use `all` instead of `infra` on first setup when bootstrap resources are not created yet.
 
-CI release workflow is available at `.github/workflows/graphql-release.yml` and can be run manually via GitHub Actions `workflow_dispatch`.
+Head (Container App image build + push + deploy):
+
+```sh
+./scripts/release-head.sh dev [image_tag]
+```
+
+GraphQL (Container App image build + push + deploy):
+
+```sh
+./scripts/release-graphql.sh dev [image_tag]
+```
+
+Both scripts resolve ACR in this order:
+- `ACR_NAME` env var (explicit override)
+- Terraform output `acr_name` for the target environment
+- Existing Container App image
+- Single-ACR subscription fallback
+
+By default, ACR is managed by Terraform per environment (for reproducible, isolated releases).
+
+CI workflows:
+- `.github/workflows/head-release.yml`
+- `.github/workflows/graphql-release.yml`
 
 ### Architecture
 ```

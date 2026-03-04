@@ -1,0 +1,13 @@
+{
+  "bindings": [
+    {
+      "type": "eventHubTrigger",
+      "direction": "in",
+      "name": "events",
+      "cardinality": "many",
+      "eventHubName": "%EVENTHUB_NAME%",
+      "consumerGroup": "%EVENTHUB_CONSUMER_GROUP%",
+      "connection": "EVENTHUB"
+    }
+  ]
+}

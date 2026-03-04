@@ -7,9 +7,6 @@ on:
         description: "Target environment (dev|stage|prod)"
         required: true
         default: "dev"
-      acr_name:
-        description: "Azure Container Registry name (without .azurecr.io)"
-        required: true
       image_tag:
         description: "Image tag (optional; defaults to commit sha if empty)"
         required: false
@@ -24,6 +21,7 @@ jobs:
     environment: ${{ github.event.inputs.environment }}
     env:
       TF_IN_AUTOMATION: true
+      ACR_NAME: ${{ vars.ACR_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,14 +40,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          : "${ACR_NAME}"
           TAG="${{ github.event.inputs.image_tag }}"
           if [[ -z "$TAG" ]]; then
             TAG="${GITHUB_SHA::12}"
           fi
 
-          IMAGE_URI="${{ github.event.inputs.acr_name }}.azurecr.io/msk-graphql:${TAG}"
+          IMAGE_URI="${ACR_NAME}.azurecr.io/msk-graphql:${TAG}"
 
-          az acr login -n "${{ github.event.inputs.acr_name }}"
+          az acr login -n "${ACR_NAME}"
           docker build -t "$IMAGE_URI" runtime/graphql
           docker push "$IMAGE_URI"
 

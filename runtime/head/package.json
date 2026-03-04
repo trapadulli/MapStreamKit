@@ -1,0 +1,13 @@
+{
+  "name": "msk-head-puller",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MapStreamKit head puller hello service",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

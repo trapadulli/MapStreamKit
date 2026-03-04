@@ -1,0 +1,13 @@
+{
+  "name": "msk-tail-processor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MapStreamKit tail processor starter worker",
+  "main": "src/worker.js",
+  "scripts": {
+    "start": "node src/worker.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

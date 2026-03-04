@@ -23,6 +23,9 @@ locals {
   cosmos_db   = "msk"
   cosmos_raw  = "raw_envelopes"
 
+  # Container Registry (must be lowercase alphanumeric)
+  acr_name = "acrmsk${var.env}${random_string.suffix.result}"
+
   # Managed identities
   uami_ingest    = "uami-msk-ingest-${var.env}"
   uami_adapter   = "uami-msk-adapter-${var.env}"
@@ -40,6 +43,18 @@ resource "azurerm_resource_group" "rg" {
   name     = local.rg_name
   location = var.location
   tags     = var.tags
+}
+
+# -------------------------
+# Container Registry
+# -------------------------
+resource "azurerm_container_registry" "acr" {
+  name                = local.acr_name
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  sku                 = "Basic"
+  admin_enabled       = false
+  tags                = var.tags
 }
 
 # -------------------------
@@ -200,6 +215,7 @@ resource "azurerm_key_vault" "kv" {
   resource_group_name        = azurerm_resource_group.rg.name
   tenant_id                  = data.azurerm_client_config.current.tenant_id
   sku_name                   = "standard"
+  enable_rbac_authorization  = true
   soft_delete_retention_days = 7
   purge_protection_enabled   = false
   tags                       = var.tags
@@ -249,6 +265,19 @@ resource "azurerm_role_assignment" "eh_receiver_processor" {
   principal_id         = azurerm_user_assigned_identity.processor.principal_id
 }
 
+# ACR pull permissions for containerized runtimes
+resource "azurerm_role_assignment" "acr_pull_ingest" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_user_assigned_identity.ingest.principal_id
+}
+
+resource "azurerm_role_assignment" "acr_pull_gql" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_user_assigned_identity.gql.principal_id
+}
+
 # Storage: ingest writes schemas; processor reads schemas + writes dlq/checkpoints
 resource "azurerm_role_assignment" "st_blob_contrib_ingest" {
   scope                = azurerm_storage_account.st.id
@@ -289,4 +318,16 @@ resource "azurerm_role_assignment" "kv_secrets_user_gql" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.gql.principal_id
+}
+
+resource "azurerm_role_assignment" "kv_secrets_officer_current" {
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
+resource "azurerm_role_assignment" "kv_crypto_officer_current" {
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Crypto Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
 }

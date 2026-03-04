@@ -4,22 +4,22 @@ set -euo pipefail
 usage() {
   cat <<'EOF'
 Usage:
-  ./scripts/release-graphql.sh <environment> [image_tag]
+  ./scripts/release-head.sh <environment> [image_tag]
 
 Examples:
-  ./scripts/release-graphql.sh dev
-  ./scripts/release-graphql.sh dev 2026-03-03.1
+  ./scripts/release-head.sh dev
+  ./scripts/release-head.sh dev 2026-03-03.1
 
 Behavior:
-  1) Builds runtime/graphql image (local Docker or remote ACR build)
-  2) Pushes image to <acr_name>.azurecr.io/msk-graphql:<tag>
-  3) Runs Terraform deploy with TF_VAR_graphql_container_image set to pushed image
+  1) Builds runtime/head image (local Docker or remote ACR build)
+  2) Pushes image to <acr_name>.azurecr.io/msk-head:<tag>
+  3) Runs Terraform deploy with TF_VAR_head_container_image set to pushed image
 
 ACR resolution order:
   1) ACR_NAME environment variable
   2) Terraform output acr_name for target environment
   3) ACR in resource group rg-msk-<environment> (if exactly one exists)
-  4) Existing Container App image on ca-msk-graphql-<environment>
+  4) Existing Container App image on ca-msk-head-<environment>
   5) Single ACR in current subscription (if exactly one exists)
 EOF
 }
@@ -34,15 +34,15 @@ IMAGE_TAG="${2:-$(date +%Y%m%d-%H%M%S)}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-GRAPHQL_DIR="$REPO_ROOT/runtime/graphql"
+HEAD_DIR="$REPO_ROOT/runtime/head"
 
 if ! command -v az >/dev/null 2>&1; then
   echo "Error: Azure CLI (az) not found in PATH."
   exit 1
 fi
 
-if [[ ! -f "$GRAPHQL_DIR/Dockerfile" ]]; then
-  echo "Error: GraphQL Dockerfile missing at $GRAPHQL_DIR/Dockerfile"
+if [[ ! -f "$HEAD_DIR/Dockerfile" ]]; then
+  echo "Error: Head Dockerfile missing at $HEAD_DIR/Dockerfile"
   exit 1
 fi
 
@@ -85,7 +85,7 @@ if [[ -z "$ACR_NAME" ]]; then
 fi
 
 if [[ -z "$ACR_NAME" ]]; then
-  APP_IMAGE="$(az containerapp show -g "rg-msk-${ENVIRONMENT}" -n "ca-msk-graphql-${ENVIRONMENT}" --query "properties.template.containers[0].image" -o tsv 2>/dev/null || true)"
+  APP_IMAGE="$(az containerapp show -g "rg-msk-${ENVIRONMENT}" -n "ca-msk-head-${ENVIRONMENT}" --query "properties.template.containers[0].image" -o tsv 2>/dev/null || true)"
   if [[ "$APP_IMAGE" == *".azurecr.io/"* ]]; then
     ACR_NAME="${APP_IMAGE%%.azurecr.io/*}"
   fi
@@ -104,13 +104,13 @@ if [[ -z "$ACR_NAME" ]]; then
   echo "  - ACR_NAME env var"
   echo "  - Terraform output acr_name (after infra apply)"
   echo "  - Exactly one ACR in rg-msk-${ENVIRONMENT}"
-  echo "  - Existing image on ca-msk-graphql-${ENVIRONMENT}"
+  echo "  - Existing image on ca-msk-head-${ENVIRONMENT}"
   echo "Quick fix: ./scripts/iac.sh ${ENVIRONMENT} infra"
-  echo "Manual override: ACR_NAME=<your-acr> ./scripts/release-graphql.sh ${ENVIRONMENT}"
+  echo "Manual override: ACR_NAME=<your-acr> ./scripts/release-head.sh ${ENVIRONMENT}"
   exit 1
 fi
 
-IMAGE_REPO="${ACR_NAME}.azurecr.io/msk-graphql"
+IMAGE_REPO="${ACR_NAME}.azurecr.io/msk-head"
 IMAGE_URI="${IMAGE_REPO}:${IMAGE_TAG}"
 
 if command -v docker >/dev/null 2>&1; then
@@ -118,7 +118,7 @@ if command -v docker >/dev/null 2>&1; then
   az acr login -n "$ACR_NAME"
 
   echo "Building image locally with Docker: $IMAGE_URI"
-  docker build -t "$IMAGE_URI" "$GRAPHQL_DIR"
+  docker build -t "$IMAGE_URI" "$HEAD_DIR"
 
   echo "Pushing image: $IMAGE_URI"
   docker push "$IMAGE_URI"
@@ -126,15 +126,15 @@ else
   echo "Docker not found. Using remote ACR build for: $IMAGE_URI"
   az acr build \
     --registry "$ACR_NAME" \
-    --image "msk-graphql:${IMAGE_TAG}" \
-    "$GRAPHQL_DIR"
+    --image "msk-head:${IMAGE_TAG}" \
+    "$HEAD_DIR"
 fi
 
-echo "Deploying infra with graphql_container_image=$IMAGE_URI"
+echo "Deploying infra with head_container_image=$IMAGE_URI"
 (
   cd "$REPO_ROOT"
   EXISTING_PLAN_ARGS="${TF_CLI_ARGS_plan:-}"
-  EXTRA_PLAN_ARG="-var=graphql_container_image=${IMAGE_URI}"
+  EXTRA_PLAN_ARG="-var=head_container_image=${IMAGE_URI}"
   if [[ -n "$EXISTING_PLAN_ARGS" ]]; then
     TF_CLI_ARGS_plan="$EXISTING_PLAN_ARGS $EXTRA_PLAN_ARG" ./scripts/iac.sh "$ENVIRONMENT" infra
   else

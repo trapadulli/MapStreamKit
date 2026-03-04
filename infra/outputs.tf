@@ -22,6 +22,14 @@ output "eventhub_consumer_group_processor" {
   value = azurerm_eventhub_consumer_group.processor.name
 }
 
+output "acr_name" {
+  value = azurerm_container_registry.acr.name
+}
+
+output "acr_login_server" {
+  value = azurerm_container_registry.acr.login_server
+}
+
 output "storage_account_name" {
   value = azurerm_storage_account.st.name
 }

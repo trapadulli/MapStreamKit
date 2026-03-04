@@ -1,0 +1,35 @@
+name: adapter-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment (dev|stage|prod)"
+        required: true
+        default: "dev"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Release Adapter runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/release-adapter.sh
+          ./scripts/release-adapter.sh "${{ github.event.inputs.environment }}"

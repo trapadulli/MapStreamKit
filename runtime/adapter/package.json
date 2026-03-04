@@ -1,0 +1,13 @@
+{
+  "name": "msk-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MapStreamKit adapter Azure Function ingress",
+  "main": "events/index.js",
+  "scripts": {
+    "start": "func start"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

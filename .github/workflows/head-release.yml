@@ -1,0 +1,48 @@
+name: head-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment (dev|stage|prod)"
+        required: true
+        default: "dev"
+      image_tag:
+        description: "Image tag (optional)"
+        required: false
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      ACR_NAME: ${{ vars.ACR_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Release Head runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/iac.sh scripts/release-head.sh
+          TAG="${{ github.event.inputs.image_tag }}"
+          if [[ -n "$TAG" ]]; then
+            ./scripts/release-head.sh "${{ github.event.inputs.environment }}" "$TAG"
+          else
+            ./scripts/release-head.sh "${{ github.event.inputs.environment }}"
+          fi

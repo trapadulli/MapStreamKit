@@ -22,10 +22,18 @@ resource "azurerm_container_app" "head_puller" {
     identity_ids = [azurerm_user_assigned_identity.ingest.id]
   }
 
+  dynamic "registry" {
+    for_each = startswith(var.head_container_image, "${azurerm_container_registry.acr.login_server}/") ? [1] : []
+    content {
+      server   = azurerm_container_registry.acr.login_server
+      identity = azurerm_user_assigned_identity.ingest.id
+    }
+  }
+
   template {
     container {
       name   = "head"
-      image  = "mcr.microsoft.com/azuredocs/aci-helloworld:latest" # placeholder, replace with your image
+      image  = var.head_container_image
       cpu    = 0.5
       memory = "1.0Gi"
 
@@ -49,6 +57,14 @@ resource "azurerm_container_app" "graphql_consumer" {
   identity {
     type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.gql.id]
+  }
+
+  dynamic "registry" {
+    for_each = startswith(var.graphql_container_image, "${azurerm_container_registry.acr.login_server}/") ? [1] : []
+    content {
+      server   = azurerm_container_registry.acr.login_server
+      identity = azurerm_user_assigned_identity.gql.id
+    }
   }
 
   ingress {
@@ -120,6 +136,7 @@ resource "azurerm_linux_function_app" "adapter_ingress" {
 
   app_settings = {
     EVENTHUB_NAMESPACE            = azurerm_eventhub_namespace.ehns.name
+    EVENTHUB__fullyQualifiedNamespace = "${azurerm_eventhub_namespace.ehns.name}.servicebus.windows.net"
     EVENTHUB_NAME                 = azurerm_eventhub.events.name
     APPINSIGHTS_CONNECTION_STRING = azurerm_application_insights.appi_functions.connection_string
     AzureWebJobsStorage           = azurerm_storage_account.st.primary_connection_string
@@ -147,6 +164,7 @@ resource "azurerm_linux_function_app" "tail_processor" {
   }
   app_settings = {
     EVENTHUB_NAMESPACE            = azurerm_eventhub_namespace.ehns.name
+    EVENTHUB__fullyQualifiedNamespace = "${azurerm_eventhub_namespace.ehns.name}.servicebus.windows.net"
     EVENTHUB_NAME                 = azurerm_eventhub.events.name
     EVENTHUB_CONSUMER_GROUP       = azurerm_eventhub_consumer_group.processor.name
     COSMOS_ENDPOINT               = azurerm_cosmosdb_account.cosmos.endpoint

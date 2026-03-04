@@ -14,6 +14,9 @@ Key rationale:
 ## Script location
 - `scripts/iac.sh`
 - `scripts/release-graphql.sh`
+- `scripts/release-head.sh`
+- `scripts/release-adapter.sh`
+- `scripts/release-tail.sh`
 
 ## Quickstart
 Run from repository root:
@@ -137,7 +140,51 @@ Required GitHub Environment variables:
 
 Trigger with `workflow_dispatch` inputs:
 - `environment` (for script target env)
-- `acr_name`
 - `image_tag` (optional, defaults to short commit SHA)
 
 At runtime, the workflow generates local `env/<environment>/backend.hcl` and `env/<environment>/<environment>.tfvars` from these environment values and then runs `./scripts/iac.sh <environment> infra`.
+
+## Head image release workflow
+
+Use this when Head runtime code changes and you want to roll a new Head Container App revision.
+
+```sh
+./scripts/release-head.sh <environment> [image_tag]
+```
+
+Examples:
+
+```sh
+./scripts/release-head.sh dev
+./scripts/release-head.sh dev 2026-03-03.1
+```
+
+## Adapter image release workflow
+
+```sh
+./scripts/release-adapter.sh <environment>
+```
+
+GitHub Actions workflow: `.github/workflows/adapter-release.yml`
+
+## Tail image release workflow
+
+```sh
+./scripts/release-tail.sh <environment>
+```
+
+GitHub Actions workflow: `.github/workflows/tail-release.yml`
+
+Note: Adapter/Tail are hosted as Function Apps in Terraform. These scripts deploy zip packages to `fa-msk-adapter-<env>` and `fa-msk-tail-<env>`.
+
+## Head workflow
+
+Head release script:
+
+```sh
+./scripts/release-head.sh <environment> [image_tag]
+```
+
+GitHub Actions workflow: `.github/workflows/head-release.yml`
+
+For Head and GraphQL, set `ACR_NAME` as a GitHub Environment variable (per `dev`, `stage`, `prod`) so workflows/scripts resolve the correct registry without passing CLI params.

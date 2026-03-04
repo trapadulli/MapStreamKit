@@ -39,9 +39,9 @@ Create local config files (do not commit):
 4. Initialize and apply Terraform:
    ```sh
    cd infra
-   terraform init -backend-config=backend.hcl
-   terraform plan
-   terraform apply
+   terraform init -backend-config=../env/dev/backend.hcl
+   terraform plan -var-file=../env/dev/dev.tfvars
+   terraform apply -var-file=../env/dev/dev.tfvars
    ```
 
 ## What is provisioned?
@@ -49,6 +49,7 @@ Create local config files (do not commit):
 - Azure Event Hubs (namespace, event hub, consumer groups)
 - Azure Cosmos DB (serverless, with canonical containers)
 - Azure Storage Account (for schema registry, DLQ, checkpoints, replay)
+- Azure Container Registry (per-environment image registry)
 - Azure Key Vault (RBAC model)
 - User Assigned Managed Identities (for Functions, Adapter, Processor, GraphQL)
 - Application Insights & Log Analytics (observability)

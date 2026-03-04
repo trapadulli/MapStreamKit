@@ -1,0 +1,24 @@
+{
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": ["post"],
+      "route": "events"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    },
+    {
+      "type": "eventHub",
+      "direction": "out",
+      "name": "outputEventHub",
+      "eventHubName": "%EVENTHUB_NAME%",
+      "connection": "EVENTHUB"
+    }
+  ]
+}
