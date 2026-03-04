@@ -18,6 +18,12 @@ Key rationale:
 - `scripts/release-adapter.sh`
 - `scripts/release-tail.sh`
 
+## Shell compatibility
+- Scripts are Bash (`.sh`) scripts.
+- macOS/Linux: run directly from a POSIX shell.
+- Windows: use WSL or Git Bash.
+- Docker Buildx is preferred for local image builds; if unavailable, Head/GraphQL scripts fall back to `az acr build`.
+
 ## Quickstart
 Run from repository root:
 
@@ -104,20 +110,21 @@ Use this when GraphQL runtime code changes and you want to roll a new Container 
 ### Local one-command release
 
 ```sh
-./scripts/release-graphql.sh <environment> <acr_name> [image_tag]
+./scripts/release-graphql.sh <environment> [image_tag]
 ```
 
 Examples:
 
 ```sh
-./scripts/release-graphql.sh dev myacr
-./scripts/release-graphql.sh dev myacr 2026-03-03.1
+./scripts/release-graphql.sh dev
+./scripts/release-graphql.sh dev 2026-03-03.1
 ```
 
 What it does:
 - Builds `runtime/graphql` image.
+- Resolves ACR automatically (env var, Terraform output, resource-group/app fallback).
 - Pushes to `<acr_name>.azurecr.io/msk-graphql:<tag>`.
-- Runs `./scripts/iac.sh <environment> infra` with `TF_VAR_graphql_container_image` set.
+- Runs `./scripts/iac.sh <environment> infra` with image override set at plan time.
 
 ### CI workflow (GitHub Actions)
 
