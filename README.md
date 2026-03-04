@@ -3,68 +3,68 @@
 ## Overview
  An Azure-native event ingestion and control-plane system that pulls data from external APIs, normalizes it, and exposes it through a GraphQL consumer layer, leveraging Azure services like Event Hubs, Cosmos DB, and Blob Storage. Infrastructure is provisioned and managed with Terraform.
 
-⚙️ Processing Pipeline:
-→ Head Pullers (Container App) fetch source data
-→ Adapter Layer validates, envelopes, and publishes events
-→ Azure Event Hubs (stream backbone)
-→ Tail Processor (Function App) consumes, transforms, deduplicates
-→ Cosmos DB stores canonical + raw documents
-→ GraphQL Service exposes query access to clients
+⚙️ Processing Pipeline:  
+→ Head Pullers (Container App) fetch source data  
+→ Adapter Layer validates, envelopes, and publishes events  
+→ Azure Event Hubs (stream backbone)  
+→ Tail Processor (Function App) consumes, transforms, deduplicates  
+→ Cosmos DB stores canonical + raw documents  
+→ GraphQL Service exposes query access to clients  
 
-📦 Azure resources include:
-→ Resource Group
-→ Event Hubs Namespace
-→ Cosmos DB (serverless)
-→ Storage Account
-→ Key Vault
-→ Managed Identities
-→ Log Analytics + Application Insights
-→ Azure Container Apps (Head + GraphQL)
-→ Azure Function App (Tail)
-→ Azure Container Registry
-→ RBAC assignments
+📦 Azure resources include:  
+→ Resource Group  
+→ Event Hubs Namespace  
+→ Cosmos DB (serverless)  
+→ Storage Account  
+→ Key Vault  
+→ Managed Identities  
+→ Log Analytics + Application Insights  
+→ Azure Container Apps (Head + GraphQL)  
+→ Azure Function App (Tail)  
+→ Azure Container Registry  
+→ RBAC assignments  
 
-🚀 Deployment Model:
-Infra → 
-→ iac – provision/update infrastructure
-→ release-head – build/push Head image + deploy
-→ release-graphql – build/push GraphQL service
-Runtime → 
-→ image build + ACR push
-→ container revision rollout
+🚀 Deployment Model:  
+Infra →  
+→ iac – provision/update infrastructure  
+→ release-head – build/push Head image + deploy  
+→ release-graphql – build/push GraphQL service  
+Runtime →   
+→ image build + ACR push  
+→ container revision rollout  
 
-🛠️ Current State:
+🛠️ Current State:  
 The platform foundation is operational 🎉
 
-Working:
-✅ Terraform infra provisioning
-✅ Event pipeline connectivity
-✅ RBAC + managed identity flow
-✅ Container deployment pipeline
-✅ GraphQL service live and queryable
-✅ Health/serviceInfo checks
-✅ Head service deployable and health-testable
+Working:  
+✅ Terraform infra provisioning  
+✅ Event pipeline connectivity  
+✅ RBAC + managed identity flow  
+✅ Container deployment pipeline  
+✅ GraphQL service live and queryable  
+✅ Health/serviceInfo checks  
+✅ Head service deployable and health-testable  
 ✅ Observability via App Insights / Log Analytics
 
-Still MVP / scaffold:
-🔶 full ETL semantics
-🔶 advanced dedupe/versioning
-🔶 adapter library maturity
-🔶 schema automation
+Still MVP / scaffold:  
+🔶 full ETL semantics  
+🔶 advanced dedupe/versioning  
+🔶 adapter library maturity  
+🔶 schema automation  
 🔶 multi-source orchestration
 
-☁️ What the Platform Enables Today:
-Rapidly spin up event ingestion environments (dev/stage/prod)
-Validate external API ingestion strategies
-Test rate-limit handling, pagination, schema mapping
-Validate identity, RBAC, and deployment flows
-Evaluate payload normalization strategies
-Prototype event-driven data platforms
+☁️ What the Platform Enables Today:  
+Rapidly spin up event ingestion environments (dev/stage/prod)  
+Validate external API ingestion strategies  
+Test rate-limit handling, pagination, schema mapping  
+Validate identity, RBAC, and deployment flows  
+Evaluate payload normalization strategies  
+Prototype event-driven data platforms  
 
-🏆 It is currently best suited for:
-Testing candidate external APIs
-Evaluating ingestion complexity
-Designing normalization strategies
+🏆 It is currently best suited for:  
+Testing candidate external APIs  
+Evaluating ingestion complexity  
+Designing normalization strategies  
 Validating data contracts before production pipelines
 
 ## Prerequisites
