@@ -6,7 +6,7 @@
 ## Overview
  An Azure-native event ingestion and control-plane system that pulls data from external APIs, normalizes it, and exposes it through a GraphQL consumer layer, leveraging Azure services like Event Hubs, Cosmos DB, and Blob Storage. Infrastructure is provisioned and managed with Terraform.
 
-![Az Resources](media/azResourcesMapStreamKit.png)
+![Az Resources](media/MSK-Architecture.png)
 
 ⚙️ Processing Pipeline:  
 → Head Pullers (Container App) fetch source data  
