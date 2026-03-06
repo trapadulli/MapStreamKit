@@ -1,10 +1,14 @@
+---
+**Note:**
+> Azure may create nested resources (like App Insights smart detection rules) inside your resource group that are not tracked by Terraform. The destroy actions are now configured to allow deletion of the resource group even if such resources exist, so `destroy` and `destroy-all` will fully clean up your environment. See [AzureRM provider docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/features-block#resource_group) for details.
+---
 # MapStreamKit
 
 ![ORM Streams](media/social_image.png)
 
 
 ## Overview
- An Azure-native event ingestion and control-plane system that pulls data from external APIs, normalizes it, and exposes it through a GraphQL consumer layer, leveraging Azure services like Event Hubs, Cosmos DB, and Blob Storage. Infrastructure is provisioned and managed with Terraform.
+ An Azure-native event ingestion and control-plane system that pulls data from external APIs, normalizes it, and exposes it through a DAB read API layer, leveraging Azure services like Event Hubs, Cosmos DB, and Blob Storage. Infrastructure is provisioned and managed with Terraform.
 
 ![Az Resources](media/MSK-Architecture.png)
 
@@ -14,7 +18,7 @@
 → Azure Event Hubs (stream backbone)  
 → Tail Processor (Function App) consumes, transforms, deduplicates  
 → Cosmos DB stores canonical + raw documents  
-→ GraphQL Service exposes query access to clients  
+→ DAB Read API exposes query access to clients  
 
 📦 Azure resources include:  
 → Resource Group  
@@ -24,7 +28,7 @@
 → Key Vault  
 → Managed Identities  
 → Log Analytics + Application Insights  
-→ Azure Container Apps (Head + GraphQL)  
+→ Azure Container Apps (Head + DAB)  
 → Azure Function App (Tail)  
 → Azure Container Registry  
 → RBAC assignments  
@@ -33,7 +37,7 @@
 Infra →  
 → iac – provision/update infrastructure  
 → release-head – build/push Head image + deploy  
-→ release-graphql – build/push GraphQL service  
+→ release-dab – build/push DAB read API service  
 Runtime →   
 → image build + ACR push  
 → container revision rollout  
@@ -46,7 +50,7 @@ Working:
 ✅ Event pipeline connectivity  
 ✅ RBAC + managed identity flow  
 ✅ Container deployment pipeline  
-✅ GraphQL service live and queryable  
+✅ DAB API live and queryable  
 ✅ Health/serviceInfo checks  
 ✅ Head service deployable and health-testable  
 ✅ Observability via App Insights / Log Analytics
@@ -134,10 +138,10 @@ Head (Container App image build + push + deploy):
 ./scripts/release-head.sh dev [image_tag]
 ```
 
-GraphQL (Container App image build + push + deploy):
+DAB (Container App image build + push + deploy):
 
 ```sh
-./scripts/release-graphql.sh dev [image_tag]
+./scripts/release-dab.sh dev [image_tag]
 ```
 
 Both scripts resolve ACR in this order:
@@ -150,7 +154,6 @@ By default, ACR is managed by Terraform per environment (for reproducible, isola
 
 CI workflows:
 - `.github/workflows/head-release.yml`
-- `.github/workflows/graphql-release.yml`
 
 ### Architecture
 ```
@@ -172,10 +175,10 @@ MapStreamKit/
 │  ├─ head/                       # Head Puller: pull external APIs, build envelopes, POST to Adapter
 │  ├─ adapter/                    # Adapter: POST /events -> Event Hubs (internal-only)
 │  ├─ tail/                       # Tail Processor: EventHubTrigger -> validate -> map -> Canonical Store
-│  └─ graphql/                    # GraphQL Consumer runtime + Dockerfile
+│  └─ dab/                        # DAB read API runtime + Dockerfile
 └─ tooling/
    ├─ schema-registry/            # (later) manage payload schemas (Blob)
-   └─ graphql-gen/                # (later) generate GraphQL/types from canonical model
+   └─ graphql-gen/                # (later) generate GraphQL artifacts from canonical model
 ```
 
 ### Dataflow (MVP)
@@ -219,7 +222,7 @@ MapStreamKit/
       |                                                           |
       V                                                           V
 +---------------------------------+                   +------------------------------+   
-|      Registrar Job              |                   | GraphQL Consumer             |          
+|      Registrar Job              |                   | DAB Read API                 |          
 | - reads deploy events           |<----------------->| - consumes registrar updates |         
 | - validates & updates contracts |                   | - refreshes query schema     |
 +---------------------------------+                   +--------------o---------------+
@@ -227,7 +230,7 @@ MapStreamKit/
                                                                    V V V
 ```
 
-Naming note: Tail Processor is a backend Event Hubs consumer/mapper; client-facing reads are served by the GraphQL Consumer.
+Naming note: Tail Processor is a backend Event Hubs consumer/mapper; client-facing reads are served by DAB.
 
 - All core Azure resources are provisioned via Terraform modules in `infra/`.
 - See each `.tf` file for resource details and outputs.
@@ -256,7 +259,7 @@ Execution plan: [Implementation Plan](backlog/implementation-plan/README.md)
 
 - [x] Core infra (Event Hubs, Cosmos, Storage, Key Vault, Identities)
 - [ ] Production hardening (security, networking, observability, guardrails) — [Production Hardening Backlog](backlog/production-hardening/README.md)
-- [ ] Runtime code scaffolding (Head Puller, Adapter, Tail Processor, GraphQL Consumer) — [Runtime Scaffolding Backlog](backlog/runtime-scaffolding/README.md)
+- [ ] Runtime code scaffolding (Head Puller, Adapter, Tail Processor, DAB Read API) — [Runtime Scaffolding Backlog](backlog/runtime-scaffolding/README.md)
 - [ ] Tooling (schema registry, GraphQL codegen) — [Tooling Backlog](backlog/tooling/README.md)
 
 ---

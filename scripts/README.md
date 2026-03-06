@@ -13,16 +13,16 @@ Key rationale:
 
 ## Script location
 - `scripts/iac.sh`
-- `scripts/release-graphql.sh`
 - `scripts/release-head.sh`
 - `scripts/release-adapter.sh`
 - `scripts/release-tail.sh`
+- `scripts/release-dab.sh`
 
 ## Shell compatibility
 - Scripts are Bash (`.sh`) scripts.
 - macOS/Linux: run directly from a POSIX shell.
 - Windows: use WSL or Git Bash.
-- Docker Buildx is preferred for local image builds; if unavailable, Head/GraphQL scripts fall back to `az acr build`.
+- Docker Buildx is preferred for local image builds; if unavailable, Head/DAB scripts fall back to `az acr build`.
 
 ## Quickstart
 Run from repository root:
@@ -103,54 +103,6 @@ Use either:
 - run from repo root: `./scripts/iac.sh dev plan`
 - or from `infra/`: `../scripts/iac.sh dev plan`
 
-## GraphQL image release workflow
-
-Use this when GraphQL runtime code changes and you want to roll a new Container App revision.
-
-### Local one-command release
-
-```sh
-./scripts/release-graphql.sh <environment> [image_tag]
-```
-
-Examples:
-
-```sh
-./scripts/release-graphql.sh dev
-./scripts/release-graphql.sh dev 2026-03-03.1
-```
-
-What it does:
-- Builds `runtime/graphql` image.
-- Resolves ACR automatically (env var, Terraform output, resource-group/app fallback).
-- Pushes to `<acr_name>.azurecr.io/msk-graphql:<tag>`.
-- Runs `./scripts/iac.sh <environment> infra` with image override set at plan time.
-
-### CI workflow (GitHub Actions)
-
-Workflow file: `.github/workflows/graphql-release.yml`
-
-The workflow is environment-aware and should use GitHub Environments (`dev`, `stage`, `prod`).
-
-Required repo secrets:
-- `AZURE_CLIENT_ID`
-- `AZURE_TENANT_ID`
-- `AZURE_SUBSCRIPTION_ID`
-
-Required GitHub Environment variables:
-- `TF_BACKEND_RESOURCE_GROUP`
-- `TF_BACKEND_STORAGE_ACCOUNT`
-- `TF_BACKEND_CONTAINER`
-- `TF_BACKEND_KEY`
-- `TF_ORG`
-- `TF_LOCATION`
-
-Trigger with `workflow_dispatch` inputs:
-- `environment` (for script target env)
-- `image_tag` (optional, defaults to short commit SHA)
-
-At runtime, the workflow generates local `env/<environment>/backend.hcl` and `env/<environment>/<environment>.tfvars` from these environment values and then runs `./scripts/iac.sh <environment> infra`.
-
 ## Head image release workflow
 
 Use this when Head runtime code changes and you want to roll a new Head Container App revision.
@@ -164,6 +116,21 @@ Examples:
 ```sh
 ./scripts/release-head.sh dev
 ./scripts/release-head.sh dev 2026-03-03.1
+```
+
+## DAB image release workflow
+
+Use this when Data API Builder runtime config changes and you want to roll a new DAB Container App revision.
+
+```sh
+./scripts/release-dab.sh <environment> [image_tag]
+```
+
+Examples:
+
+```sh
+./scripts/release-dab.sh dev
+./scripts/release-dab.sh dev 2026-03-05.1
 ```
 
 ## Adapter image release workflow
@@ -184,14 +151,4 @@ GitHub Actions workflow: `.github/workflows/tail-release.yml`
 
 Note: Adapter/Tail are hosted as Function Apps in Terraform. These scripts deploy zip packages to `fa-msk-adapter-<env>` and `fa-msk-tail-<env>`.
 
-## Head workflow
-
-Head release script:
-
-```sh
-./scripts/release-head.sh <environment> [image_tag]
-```
-
-GitHub Actions workflow: `.github/workflows/head-release.yml`
-
-For Head and GraphQL, set `ACR_NAME` as a GitHub Environment variable (per `dev`, `stage`, `prod`) so workflows/scripts resolve the correct registry without passing CLI params.
+For Head and DAB, set `ACR_NAME` as a GitHub Environment variable (per `dev`, `stage`, `prod`) so workflows/scripts resolve the correct registry without passing CLI params.

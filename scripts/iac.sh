@@ -7,13 +7,16 @@ Usage:
   ./scripts/iac.sh <environment> <action>
 
 Actions:
-  all       Run bootstrap then infra (one-command full workflow).
-  preflight Validate required tools, Azure auth, and config files.
-  bootstrap Initialize and apply infra-bootstrap (first time only).
-  infra     Initialize backend, create a plan, and apply it.
-  plan      Initialize backend and create a plan file.
-  apply     Initialize backend, create a plan, and apply it.
-  recreate  Destroy and recreate the environment (with confirmation).
+  all        Run bootstrap then infra (one-command full workflow).
+  preflight  Validate required tools, Azure auth, and config files.
+  bootstrap  Initialize and apply infra-bootstrap (first time only).
+  infra      Initialize backend, create a plan, and apply it.
+  plan       Initialize backend and create a plan file.
+  apply      Initialize backend, create a plan, and apply it.
+  recreate   Destroy and recreate the environment (with confirmation).
+  destroy    Destroy infrastructure only (no confirmation, bootstrap persists).
+  delete     Alias for destroy.
+  destroy-all Destroy both infrastructure and bootstrap (complete wipe).
 
 Environment file resolution order:
   Backend config:
@@ -30,6 +33,8 @@ Examples:
   ./scripts/iac.sh dev plan
   ./scripts/iac.sh dev apply
   ./scripts/iac.sh dev recreate
+  ./scripts/iac.sh dev destroy
+  ./scripts/iac.sh dev destroy-all
 EOF
 }
 
@@ -104,7 +109,11 @@ run_plan() {
     extra_plan_args=(${IAC_TERRAFORM_PLAN_ARGS})
   fi
 
-  terraform -chdir="$INFRA_DIR" plan -var-file="$TFVARS_FILE" "${extra_plan_args[@]}" -out="$PLAN_FILE"
+  if (( ${#extra_plan_args[@]} > 0 )); then
+    terraform -chdir="$INFRA_DIR" plan -var-file="$TFVARS_FILE" "${extra_plan_args[@]}" -out="$PLAN_FILE"
+  else
+    terraform -chdir="$INFRA_DIR" plan -var-file="$TFVARS_FILE" -out="$PLAN_FILE"
+  fi
   echo "Plan file created: $PLAN_FILE"
 }
 
@@ -216,6 +225,23 @@ case "$ACTION" in
     terraform -chdir="$INFRA_DIR" destroy -var-file="$TFVARS_FILE" -auto-approve
     run_plan
     run_apply
+    ;;
+  destroy | delete)
+    resolve_infra_files
+    echo "Backend config: $BACKEND_FILE"
+    echo "Tfvars: $TFVARS_FILE"
+    run_init
+    terraform -chdir="$INFRA_DIR" destroy -var-file="$TFVARS_FILE" -auto-approve
+    ;;
+  destroy-all)
+    resolve_infra_files
+    resolve_bootstrap_file
+    echo "Backend config: $BACKEND_FILE"
+    echo "Tfvars: $TFVARS_FILE"
+    echo "Bootstrap tfvars: $BOOTSTRAP_TFVARS_FILE"
+    run_init
+    terraform -chdir="$INFRA_DIR" destroy -var-file="$TFVARS_FILE" -auto-approve
+    terraform -chdir="$BOOTSTRAP_DIR" destroy -var-file="$BOOTSTRAP_TFVARS_FILE" -auto-approve
     ;;
   *)
     echo "Error: unknown action '$ACTION'"

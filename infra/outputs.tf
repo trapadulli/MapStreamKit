@@ -62,12 +62,12 @@ output "key_vault_name" {
   value = azurerm_key_vault.kv.name
 }
 
-output "graphql_container_app_name" {
-  value = azurerm_container_app.graphql_consumer.name
+output "dab_container_app_name" {
+  value = try(azurerm_container_app.dab_api[0].name, null)
 }
 
-output "graphql_container_app_fqdn" {
-  value = azurerm_container_app.graphql_consumer.latest_revision_fqdn
+output "dab_container_app_fqdn" {
+  value = try(azurerm_container_app.dab_api[0].latest_revision_fqdn, null)
 }
 
 output "appinsights_connection_string" {

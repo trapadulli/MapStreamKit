@@ -8,7 +8,7 @@ Status legend: Proposed | In Progress | Blocked | Done
 - `runtime/head` (Head Puller provider integrations / envelope creation)
 - `runtime/adapter` (Adapter API to Event Hubs)
 - `runtime/tail` (Tail Processor from Event Hub to Canonical Store)
-- `runtime/graphql` (GraphQL Consumer over canonical model)
+- `runtime/dab` (DAB read API over canonical model)
 
 ## Now (MVP)
 
@@ -56,11 +56,11 @@ Status legend: Proposed | In Progress | Blocked | Done
 - Acceptance criteria:
   - At least one provider integration produces valid events.
 
-### R1-02: Add GraphQL Consumer scaffold
+### R1-02: Add DAB read API scaffold
 - Priority: P1
 - Status: Proposed
 - Deliverables:
-  - GraphQL service skeleton and schema bootstrap.
+  - DAB service skeleton and schema bootstrap.
   - Basic query path over canonical Cosmos data.
 - Acceptance criteria:
   - Health endpoint + sample query works in dev.

@@ -1,5 +1,3 @@
 org      = "yourorg"
 env      = "dev"
 location = "centralus"
-graphql_container_image = "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
-head_container_image    = "mcr.microsoft.com/azuredocs/aci-helloworld:latest"

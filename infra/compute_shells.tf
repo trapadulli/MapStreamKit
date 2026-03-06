@@ -47,9 +47,9 @@ resource "azurerm_container_app" "head_puller" {
   tags = var.tags
 }
 
-# GraphQL Consumer host (Azure Container App)
-resource "azurerm_container_app" "graphql_consumer" {
-  name                         = "ca-msk-graphql-${var.env}"
+resource "azurerm_container_app" "dab_api" {
+  count                        = var.enable_dab ? 1 : 0
+  name                         = "ca-msk-dab-${var.env}"
   resource_group_name          = azurerm_resource_group.rg.name
   container_app_environment_id = azurerm_container_app_environment.msk_env.id
   revision_mode                = "Single"
@@ -60,7 +60,7 @@ resource "azurerm_container_app" "graphql_consumer" {
   }
 
   dynamic "registry" {
-    for_each = startswith(var.graphql_container_image, "${azurerm_container_registry.acr.login_server}/") ? [1] : []
+    for_each = startswith(var.dab_container_image, "${azurerm_container_registry.acr.login_server}/") ? [1] : []
     content {
       server   = azurerm_container_registry.acr.login_server
       identity = azurerm_user_assigned_identity.gql.id
@@ -69,7 +69,7 @@ resource "azurerm_container_app" "graphql_consumer" {
 
   ingress {
     external_enabled = true
-    target_port      = 4000
+    target_port      = 5000
     transport        = "auto"
 
     traffic_weight {
@@ -80,29 +80,19 @@ resource "azurerm_container_app" "graphql_consumer" {
 
   template {
     container {
-      name   = "graphql"
-      image  = var.graphql_container_image
+      name   = "dab"
+      image  = var.dab_container_image
       cpu    = 0.5
       memory = "1.0Gi"
 
       env {
-        name  = "PORT"
-        value = "4000"
+        name  = "COSMOS_CONNECTION_STRING"
+        value = azurerm_cosmosdb_account.cosmos.primary_sql_connection_string
       }
 
       env {
-        name  = "COSMOS_ENDPOINT"
-        value = azurerm_cosmosdb_account.cosmos.endpoint
-      }
-
-      env {
-        name  = "COSMOS_DB"
-        value = azurerm_cosmosdb_sql_database.db.name
-      }
-
-      env {
-        name  = "COSMOS_CONTAINER"
-        value = azurerm_cosmosdb_sql_container.raw_envelopes.name
+        name  = "DAB_ENVIRONMENT"
+        value = "Development"
       }
 
       env {

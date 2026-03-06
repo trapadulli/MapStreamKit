@@ -134,10 +134,10 @@ fi
 echo "Deploying infra with head_container_image=$IMAGE_URI"
 (
   cd "$REPO_ROOT"
-  CURRENT_GRAPHQL_IMAGE="$(az containerapp show -g "rg-msk-${ENVIRONMENT}" -n "ca-msk-graphql-${ENVIRONMENT}" --query "properties.template.containers[0].image" -o tsv 2>/dev/null || true)"
+  CURRENT_DAB_IMAGE="$(az containerapp show -g "rg-msk-${ENVIRONMENT}" -n "ca-msk-dab-${ENVIRONMENT}" --query "properties.template.containers[0].image" -o tsv 2>/dev/null || true)"
   PLAN_ARGS="-var=head_container_image=${IMAGE_URI}"
-  if [[ -n "$CURRENT_GRAPHQL_IMAGE" ]]; then
-    PLAN_ARGS="$PLAN_ARGS -var=graphql_container_image=${CURRENT_GRAPHQL_IMAGE}"
+  if [[ -n "$CURRENT_DAB_IMAGE" ]]; then
+    PLAN_ARGS="$PLAN_ARGS -var=dab_container_image=${CURRENT_DAB_IMAGE} -var=enable_dab=true"
   fi
   IAC_TERRAFORM_PLAN_ARGS="$PLAN_ARGS" ./scripts/iac.sh "$ENVIRONMENT" infra
 )

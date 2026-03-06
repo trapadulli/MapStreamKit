@@ -51,7 +51,7 @@ Create local config files (do not commit):
 - Azure Storage Account (for schema registry, DLQ, checkpoints, replay)
 - Azure Container Registry (per-environment image registry)
 - Azure Key Vault (RBAC model)
-- User Assigned Managed Identities (for Functions, Adapter, Processor, GraphQL)
+- User Assigned Managed Identities (for Functions, Adapter, Processor, DAB)
 - Application Insights & Log Analytics (observability)
 - Role assignments for secure access
 

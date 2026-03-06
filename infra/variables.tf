@@ -42,14 +42,20 @@ variable "tags" {
   default     = {}
 }
 
-variable "graphql_container_image" {
-  type        = string
-  description = "Container image for GraphQL Consumer host"
-  default     = "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
-}
-
 variable "head_container_image" {
   type        = string
   description = "Container image for Head Puller host"
   default     = "mcr.microsoft.com/azuredocs/aci-helloworld:latest"
+}
+
+variable "enable_dab" {
+  type        = bool
+  description = "Enable Data API Builder container app"
+  default     = true
+}
+
+variable "dab_container_image" {
+  type        = string
+  description = "Container image for Data API Builder host"
+  default     = "mcr.microsoft.com/azure-databases/data-api-builder:latest"
 }
