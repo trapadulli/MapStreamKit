@@ -1,7 +1,3 @@
----
-**Note:**
-> Azure may create nested resources (like App Insights smart detection rules) inside your resource group that are not tracked by Terraform. The destroy actions are now configured to allow deletion of the resource group even if such resources exist, so `destroy` and `destroy-all` will fully clean up your environment. See [AzureRM provider docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/features-block#resource_group) for details.
----
 # MapStreamKit
 
 ![ORM Streams](media/social_image.png)
